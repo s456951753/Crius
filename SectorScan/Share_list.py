@@ -23,10 +23,12 @@ pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
 #Extract basic stock information - trading snapshot
 sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
 
+#Select small cap stocks with pre-defined cutoffs and with pre-defined PE range
 templist1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(small_cap_cutoff_low, small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, pe_cutoff_up)]
-#select small cap stocks with pre-defined cutoffs and with pre-defined PE range
 
-#templist2 = templist1[templist1['pe_ttm'].between(0.01, pe_cutoff_up)] #select stocks with pre-defined PE range
+#select stocks with pre-defined PE range
+templist2 = templist1['ts_code']
+
 
 
 #sector_full_list_snapshot.sort_values(by='total_mv')
