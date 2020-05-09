@@ -131,3 +131,6 @@ dmypy.json
 
 #pycharm file
 .idea/workspace.xml
+
+#configuration file
+Trading_Strategy/crius.properties

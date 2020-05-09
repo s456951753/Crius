@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import tushare as ts
+import Utils.configuration_file_service as config_service
 
-token = '3c311a0c0eb056bfe6c27a161e6cab275649b74245cfd5679a75dca9'
+token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
+                                   property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
 all_data = {}
