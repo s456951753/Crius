@@ -4,9 +4,13 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+#Load Tushare
+import Utils.configuration_file_service as config_service
 import tushare as ts
-token='3c311a0c0eb056bfe6c27a161e6cab275649b74245cfd5679a75dca9'
-pro=ts.pro_api(token)
+
+token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
+                                   property_name=config_service.TS_TOKEN_NAME)
+pro = ts.pro_api(token)
 
 snapshot_date = '20200507'
 

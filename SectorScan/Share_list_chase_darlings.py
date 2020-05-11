@@ -3,6 +3,8 @@ import datetime
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+#Load Tushare
 import Utils.configuration_file_service as config_service
 import tushare as ts
 
