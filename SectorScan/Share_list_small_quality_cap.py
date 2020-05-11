@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+
+from rqalpha import run_code
+
+
 from datetime import datetime, timedelta
 import time as t
 import pandas as pd
@@ -18,8 +22,7 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
-#Load rqalpha
-from rqalpha import run_code
+# Load rqalpha
 from rqalpha.api import *
 
 #Setup - fundamental section
@@ -70,85 +73,20 @@ templist4 =templist3['ts_code'].tolist()
 #print(templist4)
 
 #get multi-year key financial info then covert to dataframe
-#fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date
-#fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date
+fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date
+fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date
 
-#fin_data = {} #TODO: Not working yet
-#for ticker in templist4:
-#    fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date,
-#                         fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
+fin_data = {} #TODO: Not working yet
+for ticker in templist4:
+    fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date,
+                         fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
 
-#fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy']
-#                    for stockitem, data in fin_data.items()})
+fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy']
+                    for stockitem, data in fin_data.items()})
 #TODO: the above section is not working yet
 
-code = """
-# 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
-def init(context):
 
-    # 选择我们感兴趣的股票
-    context.stocks = templist4
 
-    context.TIME_PERIOD = 14
-    context.HIGH_RSI = 85
-    context.LOW_RSI = 30
-    context.ORDER_PERCENT = 0.3
-
-# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
-def handle_bar(context, bar_dict):
-    # 开始编写你的主要的算法逻辑
-
-    # bar_dict[order_book_id] 可以拿到某个证券的bar信息
-    # context.portfolio 可以拿到现在的投资组合状态信息
-
-    # 使用order_shares(id_or_ins, amount)方法进行落单
-
-    # TODO: 开始编写你的算法吧！
-
-    # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
-    for stock in context.stocks:
-        # 读取历史数据
-        prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
-
-        # 用Talib计算RSI值
-        rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
-
-        cur_position = get_position(stock).quantity
-        # 用剩余现金的30%来购买新的股票
-        target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
-
-        # 当RSI大于设置的上限阀值，清仓该股票
-        if rsi_data > context.HIGH_RSI and cur_position > 0:
-            order_target_value(stock, 0)
-
-        # 当RSI小于设置的下限阀值，用剩余cash的一定比例补仓该股
-        if rsi_data < context.LOW_RSI:
-#            logger.info("target available cash caled: " + str(target_available_cash))
-            # 如果剩余的现金不够一手 - 100shares，那么会被ricequant 的order management system reject掉
-            order_value(stock, target_available_cash)
-"""
-
-config = {
-  "base": {
-    "start_date": "2016-06-01",
-    "end_date": "2019-12-01",
-    "benchmark": "000300.XSHG",
-    "accounts": {
-      "stock": 100000
-    }
-  },
-  "extra": {
-    "log_level": "verbose",
-  },
-  "mod": {
-    "sys_analyser": {
-      "enabled": True,
-      "plot": True
-    }
-  }
-}
-
-run_code(code, config)
 
 #Export the df to excel
 #fin_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list2.xlsx', index = False)
