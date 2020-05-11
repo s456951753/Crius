@@ -24,13 +24,12 @@ fin_data = {}
 for ticker in list:
     fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date, fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
 
-fin_data_list = pd.DataFrame({stockitem: data['ebt_yoy']
-                    for stockitem, data in fin_data.items()})
+fin_data_list = pd.DataFrame({fin_data})
 
 
 #Export the df to excel
 #list_days_filter.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
 
-print(fin_data_list)
+print(fin_data)
 
 #df1['snapshot_date'] = datetime.strptime(snapshot_date, '%Y%m%d').date()
