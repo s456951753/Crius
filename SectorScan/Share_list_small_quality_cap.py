@@ -19,7 +19,7 @@ small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （uni
 small_cap_cutoff_low = 1050000 #defind the cutoff for small caps lower end （unit=万元）
 pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
 
-#Setup - technical section
+#Setup - technical section...
 
 
 #Extract basic stock information
