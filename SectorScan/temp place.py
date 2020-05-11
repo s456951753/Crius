@@ -10,19 +10,27 @@ pro=ts.pro_api(token)
 
 snapshot_date = '20200507'
 
-list_days_filter = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,list_date')
-list_days_filter['list_date'] = pd.to_datetime(list_days_filter['list_date'],format='%Y%m%d')
-list_days_filter['snapshot_date'] = snapshot_date
-list_days_filter['snapshot_date'] = pd.to_datetime(list_days_filter['snapshot_date'],format='%Y%m%d')
-list_days_filter['list_days'] = (list_days_filter['snapshot_date'] - list_days_filter['list_date']).dt.days
-list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
+list = ['000685.SZ', '000690.SZ', '000935.SZ', '000937.SZ', '002004.SZ', '002048.SZ',
+        '002419.SZ', '002430.SZ', '002440.SZ', '002444.SZ', '002531.SZ', '002597.SZ',
+        '002605.SZ', '002798.SZ', '300080.SZ', '300118.SZ', '600064.SH', '600295.SH', '600329.SH',
+        '600348.SH', '600507.SH', '600682.SH', '600717.SH', '600729.SH', '600803.SH', '601107.SH',
+        '601163.SH', '601330.SH', '601567.SH', '603328.SH']
 
-list_days_filter_list = list_days_filter2['ts_code'].tolist()
+#get multi-year key financial info then covert to dataframe
+fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date
+fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date
+
+fin_data = {}
+for ticker in list:
+    fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date, fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
+
+fin_data_list = pd.DataFrame({stockitem: data['ebt_yoy']
+                    for stockitem, data in fin_data.items()})
 
 
 #Export the df to excel
 #list_days_filter.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
 
-print(list_days_filter_list)
+print(fin_data_list)
 
 #df1['snapshot_date'] = datetime.strptime(snapshot_date, '%Y%m%d').date()

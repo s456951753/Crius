@@ -50,15 +50,21 @@ list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
 
 templist3 = templist2[~templist2.ts_code.isin(list_days_filter2)]
 
-print(templist3)
+templist4 =templist3['ts_code'].tolist()
 
-#get multi-year key financial info
-#fina_start_date = 20190930 #TODO: this part to be automated later, reference snapshot_date
-#fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date
+print(templist4)
 
-#fin_data = {}
-#for ticker in templist3:
-#    fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date, fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
+#get multi-year key financial info then covert to dataframe
+fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date
+fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date
+
+fin_data = {}
+for ticker in list:
+    fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date, fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
+
+fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy']
+                    for stockitem, data in fin_data.items()})
+#TODO: the above section is not working yet
 
 #Strategy one
 #Look for mid to small cap, reasonable PE, no up limited in the last 30 days, reasonable gearing,
