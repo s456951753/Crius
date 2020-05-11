@@ -133,4 +133,4 @@ dmypy.json
 .idea/workspace.xml
 
 #configuration file
-Trading_Strategy/crius.properties
+crius.properties
