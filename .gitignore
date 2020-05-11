@@ -130,9 +130,7 @@ dmypy.json
 
 
 #pycharm file
-.idea/workspace.xml
-.idea/misc.xml
-.idea/modules.xml
+.idea
 
 #configuration file
 crius.properties
