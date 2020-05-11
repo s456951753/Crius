@@ -49,16 +49,16 @@ sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snap
 templist1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(small_cap_cutoff_low, small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, pe_cutoff_up)]
 
 
-#remove stocks that had up limited in the last x days
-up_start_date = 20200424 #TODO: this part to be automated later, reference snapshot_date
-up_end_date = 20200507 #TODO: this part to be automated later reference snapshot_date
+#remove stocks that had up limited in the last x days 剔除过去N天内有涨停的的股票
+up_start_date = 20200424 #TODO: this part to be automated later, reference snapshot_date. 改为自动化，这个日期应为 snapshot_date - N天. N 为人工输入
+up_end_date = 20200507 #TODO: this part to be automated later reference snapshot_date。 改为自动化，这个日期应为 snapshot_date 前一天
 
 up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date)['ts_code']
 
 templist2 = templist1[~templist1.ts_code.isin(up_list)]
 t.sleep(1)
 
-#filter on stocks with at least three years trading history #TODO: the three year variable shoudl be an input field
+#filter on stocks with at least three years trading history #TODO: the three year variable shoudl be an input field 730 改为人工输入变量，以年为单位
 list_days_filter = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,list_date')
 list_days_filter['list_date'] = pd.to_datetime(list_days_filter['list_date'],format='%Y%m%d')
 list_days_filter['snapshot_date'] = snapshot_date
@@ -73,17 +73,17 @@ templist4 =templist3['ts_code'].tolist()
 #print(templist4)
 
 #get multi-year key financial info then covert to dataframe
-fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date
-fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date
+fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date。 改为自动化，这个日期应为 snapshot_date - N天年 N 为人工输入
+fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date。 改为自动化，这个日期应为 snapshot_date 距离最近的 过去的 六月底或者十二月底
 
-fin_data = {} #TODO: Not working yet
+fin_data = {} #TODO: Not working yet。 求助，以下循环语句不工作。 目的是采纳 templist4 里面的所有值 循环 pro.query。 将产生的结果合并成一个 dataframe
 for ticker in templist4:
     fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date,
                          fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
 
 fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy']
                     for stockitem, data in fin_data.items()})
-#TODO: the above section is not working yet
+
 
 
 
