@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
 from rqalpha import run_code
-
 
 from datetime import datetime, timedelta
 import time as t
@@ -89,4 +87,4 @@ fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_
 
 
 #Export the df to excel
-#fin_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list2.xlsx', index = False)
+fin_data_list.to_excel(r'C:\Users\Austin\Desktop\Tushare\list4.xlsx', index = False)

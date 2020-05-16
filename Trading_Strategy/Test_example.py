@@ -3,6 +3,9 @@ import pandas as pd
 import tushare as ts
 import Utils.configuration_file_service as config_service
 
+import Utils.numeric_utils as TuRq
+
+
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
