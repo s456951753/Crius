@@ -58,7 +58,7 @@ up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date)['ts_cod
 templist2 = templist1[~templist1.ts_code.isin(up_list)]
 t.sleep(1)
 
-#filter on stocks with at least three years trading history #TODO: the three year variable shoudl be an input field 730 改为人工输入变量，以年为单位
+#filter on stocks with at least three years trading history #TODO: the three year variable should be an input field 730 改为人工输入变量，以年为单位
 list_days_filter = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,list_date')
 list_days_filter['list_date'] = pd.to_datetime(list_days_filter['list_date'],format='%Y%m%d')
 list_days_filter['snapshot_date'] = snapshot_date
