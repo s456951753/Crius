@@ -56,6 +56,11 @@ def get_closest_half_year(snapshot_date=datetime.datetime.strftime(datetime.date
 
     return datetime.datetime.strftime(datetime.date(new_year, new_month, new_day), "%Y%m%d")
 
+def get_list_of_converted_stock_code(symbols):
+    returnlist = []
+    for symbol in symbols:
+        returnlist.append(get_converted_stock_code(symbol))
+    return returnlist
 
 def validate(symbol):
     a = re.compile("\d{6}\.SZ|SH|XSHE|XSHG")

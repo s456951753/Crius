@@ -21,5 +21,10 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(nu.get_closest_half_year("20200101"), "20191231")
         self.assertEqual(nu.get_closest_half_year("30220709"), "30220630")
 
+    def test_get_list_of_converted_stock_code(self):
+        self.assertEqual(nu.get_list_of_converted_stock_code(['000690.SZ', '603328.SH', '000690.XSHE', '603328.XSHG']),
+                         ['000690.XSHE', '603328.XSHG', '000690.SZ', '603328.SH'])
+
+
 if __name__ == '__main__':
     unittest.main()
