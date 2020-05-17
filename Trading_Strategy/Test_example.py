@@ -1,50 +1,104 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import tushare as ts
-import Utils.configuration_file_service as config_service
+# -*- coding: utf-8 -*-
+
+from rqalpha import run_code
+
+code = """
+
+from rqalpha.api import *
 
 import Utils.numeric_utils as TuRq
+from datetime import datetime, timedelta
+from datetime import date
+import time as t
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import talib
 
+#Load Tushare
+from rqalpha.apis.api_base import history_bars, get_position
+from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_value, order_value
+
+import Utils.configuration_file_service as config_service
+import tushare as ts
 
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
-all_data = {}
-# 遍历list里面的股票，可以写入多个股票
-for ticker in ['000011.SZ', '000014.SZ', '000001.SZ', '000002.SZ']:
-    # 获取各股票某时段的价格
-    all_data[ticker] = pro.daily(ts_code=ticker, start_date='2018-01-01', end_date='2019-01-01')
-# 用for循环遍历股票价格并转换为dataframe的形式
-price = pd.DataFrame({tic: data['close']
-                      for tic, data in all_data.items()})
-# 计算股票价格每日变化
-ticker_date = pro.daily(ts_code='000011.SZ', start_date='2018-01-01', end_date='2019-01-01')
-ticker_date['trade_date'] = pd.to_datetime(ticker_date['trade_date'], format='%Y%m%d')
+# 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
+def init(context):
 
-ticker_date_2 = ticker_date['trade_date']
-
-price['trade_date'] = ticker_date_2
-
-price.set_index('trade_date', inplace=True)
-
-rets = price / price.shift(1) - 1  # shift起平移作用
-print(rets.head())
-
-plt.figure(figsize=[18, 5])
-price['000011.SZ'].plot()
-
-price_2 = price['000011.SZ']
-
-price_2.rolling(window=20).mean().plot(label='20 day moving average')
-price_2.rolling(window=5).mean().plot(label='5 day moving average')
-plt.legend(loc='best')
-
-plt.show()
-# df_1 = pro.daily(ts_code=stock_list, start_date='20180701', end_date='20180709')
+    # 选择我们感兴趣的股票
+    small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
+    small_cap_cutoff_low = 1000000 #defind the cutoff for small caps lower end （unit=万元）
+    pe_cutoff_up = 5 #defind the cutoff for stock PE ratio
+    
+    context.TIME_PERIOD = 14
+    context.HIGH_RSI = 85
+    context.LOW_RSI = 30
+    context.ORDER_PERCENT = 0.1
 
 
-# df_12 = df_1.loc[:, 'open'] ,000002.SZ,000004.SZ,000007.SZ
-# returns_1 = df_12.pct_change().dropna()
+# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
+def handle_bar(context, bar_dict):
+    # 开始编写你的主要的算法逻辑
 
-# sns.jointplot(returns_1, returns_2, kind='reg', height=12)
+    # bar_dict[order_book_id] 可以拿到某个证券的bar信息
+    # context.portfolio 可以拿到现在的投资组合状态信息
+
+    # 使用order_shares(id_or_ins, amount)方法进行落单
+
+    # TODO: 开始编写你的算法吧！
+
+    # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
+    d0 = date.today()
+    snapshot_date = d0.strftime("%Y%m%d")
+    
+    sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
+    list1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(small_cap_cutoff_low, small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, pe_cutoff_up)]
+    context.stocks = TuRq.get_list_of_converted_stock_code(list1)
+    
+    for stock in context.stocks:
+        # 读取历史数据
+        prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
+
+        # 用Talib计算RSI值
+        rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
+
+        cur_position = get_position(stock).quantity
+        # 用剩余现金的30%来购买新的股票
+        target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
+
+        # 当RSI大于设置的上限阀值，清仓该股票
+        if rsi_data > context.HIGH_RSI and cur_position > 0:
+            order_target_value(stock, 0)
+
+        # 当RSI小于设置的下限阀值，用剩余cash的一定比例补仓该股
+        if rsi_data < context.LOW_RSI:
+            logger.info("target available cash caled: " + str(target_available_cash))
+            # 如果剩余的现金不够一手 - 100shares，那么会被ricequant 的order management system reject掉
+            order_value(stock, target_available_cash)
+"""
+
+config = {
+  "base": {
+    "start_date": "2016-06-01",
+    "end_date": "2019-12-01",
+    "benchmark": "000300.XSHG",
+    "accounts": {
+      "stock": 100000
+    }
+  },
+  "extra": {
+    "log_level": "verbose",
+  },
+  "mod": {
+    "sys_analyser": {
+      "enabled": True,
+      "plot": True
+    }
+  }
+}
+
+run_code(code, config)

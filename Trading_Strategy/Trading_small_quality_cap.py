@@ -70,18 +70,11 @@ templist3 = templist2[~templist2.ts_code.isin(list_days_filter2)]
 
 templist4 =templist3['ts_code'].tolist()
 
-all_data = {}
-# 遍历list里面的股票，可以写入多个股票
-for ticker in templist4:
-    # 获取各股票某时段的价格
-    all_data[ticker] = TuRq.get_converted_stock_code(symbol)
-# 用for循环遍历股票价格并转换为dataframe的形式
-price = pd.DataFrame({tic: data['close']
-                      for tic, data in all_data.items()})
+templist5 = TuRq.get_list_of_converted_stock_code(templist4)
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
-    context.s1 = templist4
+    context.s1 = templist5
 
     # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
     context.SHORTPERIOD = 14
