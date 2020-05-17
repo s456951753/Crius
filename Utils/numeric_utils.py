@@ -11,6 +11,7 @@ def get_converted_stock_code(symbol):
     """
     Based on the symbol given, convert symbol from rqalpha to tushare or vise versa. Will check if the symbol meets format
     criteria, i.e. ######.SZ/XSHE/SH/XSHG and throw SymbolInvalidException if didn't meet
+    :raises SymbolInvalidException if the symbol name does not meet the naming format
     """
     validate(symbol)
     symbol = str(symbol)
@@ -56,7 +57,14 @@ def get_closest_half_year(snapshot_date=datetime.datetime.strftime(datetime.date
 
     return datetime.datetime.strftime(datetime.date(new_year, new_month, new_day), "%Y%m%d")
 
+
 def get_list_of_converted_stock_code(symbols):
+    """
+    provides list support for symbol conversion.
+    :param symbols: a list(array) of symbols
+    :return: a list of symbols
+    :raises: SymbolInvalidException as defined in get_converted_stock_code
+    """
     returnlist = []
     for symbol in symbols:
         returnlist.append(get_converted_stock_code(symbol))
