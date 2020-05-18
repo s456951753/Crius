@@ -9,7 +9,7 @@ from rqalpha.api import *
 import numpy as np
 import math
 import Utils.numeric_utils as TuRq
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import time as t
 import pandas as pd
 import seaborn as sns
@@ -27,123 +27,56 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
-list = ['000685.SZ', '000690.SZ', '000935.SZ', '000937.SZ', '002004.SZ', '002048.SZ',
-        '002419.SZ', '002430.SZ', '002440.SZ', '002444.SZ', '002531.SZ', '002597.SZ',
-        '002605.SZ', '002798.SZ', '300080.SZ', '300118.SZ', '600064.SH', '600295.SH', '600329.SH',
-        '600348.SH', '600507.SH', '600682.SH', '600717.SH', '600729.SH', '600803.SH', '601107.SH',
-        '601163.SH', '601330.SH', '601567.SH', '603328.SH']
+#选取符合条件的股票
+def query_fundamental(context, bar_dict):
+    today = date.today()
+    d1 = today.strftime("%Y%m%d")
+    list = pro.daily(trade_date=d1)
+    list = list.sort_values(by='pct_chg', ascending=False).head(5)
+    list = list['ts_code'].to_list()
+    
+    # 将查询结果dataframe存放在context里面以备后面只需：
+    context.stocks= TuRq.get_list_of_converted_stock_code(list)
+
+    # 实时打印日志看下查询结果：
+    logger.info(context.stocks)
+
+    # 对于每一个股票按照平均现金买入：
+    update_universe(context.stocks)
+
+    stocksNumber = len(context.stocks)
+    context.average_percent = 0.99 / stocksNumber
+    logger.info("Calculated average percent for each stock is: %f" % context.average_percent)
+
+    # 先查一下选出来的股票是否在已有的portfolio里面：
+    # 这样做并不是最好的，只是代码比较简单
+    # 先清仓然后再买入这一个月新的符合条件的股票
+    logger.info("Clearing all the current positions.")
+    for holding_stock in context.portfolio.positions.keys():
+        if context.portfolio.positions[holding_stock].quantity != 0:
+            order_target_percent(holding_stock, 0)
+
+    logger.info("Building new positions for portfolio.")
+    for stock in context.stocks:
+        order_target_percent(stock, context.average_percent)
+        logger.info("Buying: " + str(context.average_percent) + " % for stock: " + str(stock))
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
-def init(context):   
-#选取板块
-    context.stks= TuRq.get_list_of_converted_stock_code(list)
-
-    context.flag=True
-    # 确定运行频率    
-    scheduler.run_daily(rebalance)
-
-    # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
-def get_stocks(context, bar_dict):
-    stocks=set([])
-
-    for i in range(0,6): 
-
-        # 在这个循环里，首先获取每个板块的财务数据
-        fundamental_df = get_fundamentals(
-
-            query(fundamentals.financial_indicator.adjusted_return_on_equity_weighted_average, fundamentals.eod_derivative_indicator.pb_ratio,fundamentals.eod_derivative_indicator.pe_ratio
-            ).filter(
-              fundamentals.income_statement.stockcode.in_(context.stks[i])
-            ).filter(
-              fundamentals.eod_derivative_indicator.pe_ratio<999
-            ).order_by(
-             fundamentals.eod_derivative_indicator.pb_ratio
-            )
-        )
-
-        # 使用pandas对财务数据进行排名并打分
-        df=fundamental_df.T
-        df=df.sort_values('pb_ratio')
-        df['pb_score']=list(range(1,len(df)+1))
-        df=df.sort_values('pe_ratio')
-        df['pe_score']=list(range(1,len(df)+1))
-        scores=[]
-        for stock in df.T.columns.values:
-
-            scores.append(df.loc[stock,'pe_score']+df.loc[stock,'pb_score'])
-        df['scores']=list(scores)
-        df=df.sort_values('scores')
-
-        #取得分最低的三个股票
-        df=df.head(3)
-        #logger.info(df)
-
-        stocks = stocks | set(df.T.columns.values)
-        #logger.info(i) 
+def init(context):
+    scheduler.run_monthly(query_fundamental, monthday=1)
 
 
-    # 买入的股票，进行调仓操作
-    stocks =stocks | set(fundamental_df.columns.values)
-    return stocks
-def rebalance(context, bar_dict):
-    stocks =  get_stocks(context, bar_dict) 
-    holdings = set(get_holdings(context))
-
-    to_buy = stocks - holdings
-    to_sell = holdings - stocks
-    to_buy2= stocks - holdings
-
-    for stock in to_sell:
-        if bar_dict[stock].suspended == False:
-            order_target_percent(stock , 0)
-
-    if len(to_buy) == 0:
-        return
-
-    to_buy = get_trading_stocks(to_buy, context, bar_dict)
-    cash = context.portfolio.cash
-    total_value=context.portfolio.total_value
-    if len(to_buy) >0:
-        average_value = total_value *0.025
-        if average_value > total_value/len(to_buy):
-            average_value = total_value/len(to_buy)
-
-    for stock in to_buy:
-        if (bar_dict[stock].suspended == False)and(context.portfolio.cash>average_value):
-            order_target_value(stock, average_value)
-    if context.flag==True :
-        sell_open('IF88', 1)
-        context.flag=False
-
-# 得到交易的股票
-def get_trading_stocks(to_buy, context, bar_dict):
-    trading_stocks = []
-    for stock in to_buy:
-        if bar_dict[stock].suspended == False:
-            trading_stocks.append(stock)
-
-    return trading_stocks
-
-# 持仓的股票
-def get_holdings(context):
-    positions = context.portfolio.stock_account.positions
-
-    holdings = []
-    for position in positions:
-        if positions[position].quantity > 0:
-            holdings.append(position)
-
-    return holdings
+# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
-    # TODO: 开始编写你的算法吧！
-    pass   
+    pass
+    
 """
 
 
 config = {
   'base': {
     'start_date': '2016-06-01',
-    'end_date': '2019-12-01',
+    'end_date': '2017-12-01',
     # 回测频率，1d, 1m, tick
     'frequency': '1d',
     # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
@@ -159,7 +92,7 @@ config = {
 
     # 账户类别及初始资金
     'accounts': {
-      'stock': 1000
+      'stock': 100000
     },
   },
   'extra': {

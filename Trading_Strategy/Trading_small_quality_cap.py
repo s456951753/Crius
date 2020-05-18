@@ -6,7 +6,7 @@ code = """
 from rqalpha.api import *
 
 import Utils.numeric_utils as TuRq
-from datetime import datetime, timedelta
+from datetime import date， datetime, timedelta
 import time as t
 import pandas as pd
 import seaborn as sns
