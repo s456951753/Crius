@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from rqalpha import run_code
-
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import time as t
 import pandas as pd
 import seaborn as sns
@@ -24,7 +22,8 @@ pro = ts.pro_api(token)
 from rqalpha.api import *
 
 #Setup - fundamental section
-snapshot_date = '20200507'
+today = date.today().strftime("%Y%m%d")
+snapshot_date = today
 small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
 small_cap_cutoff_low = 1050000 #defind the cutoff for small caps lower end （unit=万元）
 pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
@@ -68,9 +67,11 @@ templist3 = templist2[~templist2.ts_code.isin(list_days_filter2)]
 
 templist4 =templist3['ts_code'].tolist()
 
-#print(templist4)
+print(templist4)
 
 #get multi-year key financial info then covert to dataframe
+def templace(symbols):
+    """
 fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date。 改为自动化，这个日期应为 snapshot_date - N天年 N 为人工输入
 fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date。 改为自动化，这个日期应为 snapshot_date 距离最近的 过去的 六月底或者十二月底
 
@@ -82,9 +83,9 @@ for ticker in templist4:
 fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy']
                     for stockitem, data in fin_data.items()})
 
-
+    """
 
 
 
 #Export the df to excel
-fin_data_list.to_excel(r'C:\Users\Austin\Desktop\Tushare\list4.xlsx', index = False)
+#fin_data_list.to_excel(r'C:\Users\Austin\Desktop\Tushare\list4.xlsx', index = False)
