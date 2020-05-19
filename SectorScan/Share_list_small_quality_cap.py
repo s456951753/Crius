@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from rqalpha import run_code
+from rqalpha.api import *
 from datetime import date, datetime, timedelta
 import time as t
 import pandas as pd
@@ -67,25 +69,20 @@ templist3 = templist2[~templist2.ts_code.isin(list_days_filter2)]
 
 templist4 =templist3['ts_code'].tolist()
 
-print(templist4)
-
 #get multi-year key financial info then covert to dataframe
-def templace(symbols):
-    """
 fina_start_date = 20170930 #TODO: this part to be automated later, reference snapshot_date。 改为自动化，这个日期应为 snapshot_date - N天年 N 为人工输入
 fina_end_date = 20191231 #TODO: this part to be automated later reference snapshot_date。 改为自动化，这个日期应为 snapshot_date 距离最近的 过去的 六月底或者十二月底
 
-fin_data = {} #TODO: Not working yet。 求助，以下循环语句不工作。 目的是采纳 templist4 里面的所有值 循环 pro.query。 将产生的结果合并成一个 dataframe
+fin_data = {}
+#遍历list里面的股票，可以写入多个股票
 for ticker in templist4:
-    fin_data = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date,
+    #获取各股票某时段的信息
+    fin_data[ticker] = pro.query('fina_indicator_vip', ts_code=ticker, start_date=fina_start_date, end_date=fina_end_date,
                          fields='ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy')
 
-fin_data_list = pd.DataFrame({stockitem: data['ts_code,end_date,debt_to_eqt,roe_avg,gross_margin,ebt_yoy']
-                    for stockitem, data in fin_data.items()})
-
-    """
+print(fin_data)
 
 
 
 #Export the df to excel
-#fin_data_list.to_excel(r'C:\Users\Austin\Desktop\Tushare\list4.xlsx', index = False)
+fin_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list4.xlsx', index = False)
