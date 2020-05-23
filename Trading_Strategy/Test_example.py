@@ -30,9 +30,9 @@ pro = ts.pro_api(token)
 def init(context):
 
     # 选择我们感兴趣的股票
-    small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
-    small_cap_cutoff_low = 1000000 #defind the cutoff for small caps lower end （unit=万元）
-    pe_cutoff_up = 5 #defind the cutoff for stock PE ratio
+    context.small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
+    context.small_cap_cutoff_low = 1000000 #defind the cutoff for small caps lower end （unit=万元）
+    context.pe_cutoff_up = 5 #defind the cutoff for stock PE ratio
     
     context.TIME_PERIOD = 14
     context.HIGH_RSI = 85
@@ -52,11 +52,15 @@ def handle_bar(context, bar_dict):
     # TODO: 开始编写你的算法吧！
 
     # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
-    d0 = date.today()
+    d0 = context.now.date()
     snapshot_date = d0.strftime("%Y%m%d")
     
     sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
-    list1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(small_cap_cutoff_low, small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, pe_cutoff_up)]
+    
+    list1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(context.small_cap_cutoff_low, context.small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, context.pe_cutoff_up)]
+    
+    list1 = list1['ts_code'].to_list()
+    
     context.stocks = TuRq.get_list_of_converted_stock_code(list1)
     
     for stock in context.stocks:
@@ -84,7 +88,7 @@ def handle_bar(context, bar_dict):
 config = {
   "base": {
     "start_date": "2016-06-01",
-    "end_date": "2019-12-01",
+    "end_date": "2016-7-01",
     "benchmark": "000300.XSHG",
     "accounts": {
       "stock": 100000

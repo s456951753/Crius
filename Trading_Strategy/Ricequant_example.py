@@ -29,8 +29,8 @@ pro = ts.pro_api(token)
 
 #选取符合条件的股票
 def query_fundamental(context, bar_dict):
-    today = date.today()
-    d1 = today.strftime("%Y%m%d")
+    d0 = context.now.date()
+    d1 = d0.strftime("%Y%m%d")
     list = pro.daily(trade_date=d1)
     list = list.sort_values(by='pct_chg', ascending=False).head(5)
     list = list['ts_code'].to_list()
