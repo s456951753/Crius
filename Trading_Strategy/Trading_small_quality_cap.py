@@ -39,7 +39,7 @@ def init(context):
     context.daysx = 5
     
     context.TIME_PERIOD = 14
-    context.HIGH_RSI = 85
+    context.HIGH_RSI = 80
     context.LOW_RSI = 30
     context.ORDER_PERCENT = 0.1
 
@@ -90,7 +90,7 @@ def handle_bar(context, bar_dict):
         rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
 
         cur_position = get_position(stock).quantity
-        # 用剩余现金的30%来购买新的股票
+        # 用剩余现金的x%来购买新的股票
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
         # 当RSI大于设置的上限阀值，清仓该股票

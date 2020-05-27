@@ -3,6 +3,7 @@
 
 from datetime import date, datetime, timedelta
 import time as t
+import time
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -21,13 +22,20 @@ pro = ts.pro_api(token)
 
 import Utils.numeric_utils as TuRq
 
-list1 = ['601360.XSHG']
-
-list2 = TuRq.get_list_of_converted_stock_code(list1)
-
-print(list2)
+#df2 = pro.index_classify(level='L2', src='SW')
 
 
+#Express data
+
+list = pro.fund_basic(market='E')
+list = list['ts_code'].to_list()
+
+appended_data = []
+for dates in list:
+    all_data = pro.fund_portfolio(ts_code=list)
+    appended_data.append(all_data)
+appended_data = pd.concat(appended_data)
 
 #Export the df to excel
-#up_list.to_excel(r'C:\Users\Austin\Desktop\Tushare\list4.xlsx', index = False)
+all_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
+
