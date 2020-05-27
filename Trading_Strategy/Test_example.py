@@ -88,7 +88,7 @@ def handle_bar(context, bar_dict):
 config = {
   "base": {
     "start_date": "2015-06-01",
-    "end_date": "2015-9-01",
+    "end_date": "2019-09-01",
     "benchmark": "000300.XSHG",
     "accounts": {
       "stock": 100000
