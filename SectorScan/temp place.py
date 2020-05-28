@@ -31,8 +31,8 @@ list = pro.fund_basic(market='E')
 list = list['ts_code'].to_list()
 
 appended_data = []
-for dates in list:
-    all_data = pro.fund_portfolio(ts_code=list)
+for fund_code in list:
+    all_data = pro.fund_portfolio(ts_code=fund_code)
     appended_data.append(all_data)
 appended_data = pd.concat(appended_data)
 
