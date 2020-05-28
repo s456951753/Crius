@@ -5,6 +5,7 @@ from datetime import date, datetime, timedelta
 import time as t
 import time
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import talib
@@ -24,17 +25,24 @@ import Utils.numeric_utils as TuRq
 
 #df2 = pro.index_classify(level='L2', src='SW')
 
+#日期格式为 月/日/年
+start_date = '4/1/2020'
+end_date = '7/1/2020'
 
-#财务指标数据
-list = ['20191231','20190630','20181231','20180630','20171231','20170630']
+datelist = pd.date_range(start=start_date, end=end_date)
+date_strings = [datetime.strftime(d, '%Y%m%d') for d in datelist]
 
-appended_data = []
-for dates in list:
-    all_data = pro.fina_indicator_vip(period=dates,fields='ts_code,end_date,eps,extra_item,gross_margin,current_ratio,quick_ratio,cash_ratio,invturn_days,arturn_days,inv_turn,ar_turn,ca_turn,fa_turn,op_income,daa,ebit,ebitda,fcff,fcfe,interestdebt,netdebt,working_capital,networking_capital,invest_capital,retained_earnings,bps,ocfps,cfps,ebit_ps,fcff_ps,fcfe_ps,netprofit_margin,grossprofit_margin,profit_to_gr,gc_of_gr,op_of_gr,ebit_of_gr,roe,roe_waa,roe_dt,roa,npta,roic,roe_yearly,roa2_yearly,roe_avg,dtprofit_to_profit,debt_to_assets,dp_assets_to_eqt,ocf_to_shortdebt,debt_to_eqt,ebit_to_interest,roa_yearly,roa_dp,profit_prefin_exp,roic_yearly,total_fa_trun,profit_to_op,basic_eps_yoy,cfps_yoy,op_yoy,ebt_yoy,netprofit_yoy,dt_netprofit_yoy,ocf_yoy,roe_yoy,bps_yoy,assets_yoy,eqt_yoy,or_yoy')
-    appended_data.append(all_data)
-appended_data = pd.concat(appended_data)
+fund_list = pd.read_excel (r'C:\Users\Austin\Desktop\Tushare\Tushare_Fund_data.xlsx', index = False)
 
+#To select rows whose column value is in list
+
+
+fund_list_snapshot = fund_list[fund_list.end_date.isin(date_strings)]
+
+fund_list_snapshot = pd.pivot_table(fund_list_snapshot,index=["symbol"],aggfunc={'stk_mkv_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
+
+fund_list_snapshot = fund_list_snapshot.sort_values(by='stk_mkv_ratio', ascending=False)
+
+print(fund_list_snapshot)
 #Export the df to excel
-appended_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
-
-
+fund_list_snapshot.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = True)

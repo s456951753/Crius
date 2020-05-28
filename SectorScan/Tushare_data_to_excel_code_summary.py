@@ -4,6 +4,7 @@
 from datetime import date, datetime, timedelta
 import time as t
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import talib
@@ -72,3 +73,9 @@ appended_data = pd.concat(appended_data)
 
 #Export the df to excel
 appended_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
+
+#主营业务构成
+df = pro.fina_mainbz_vip(period='20191231', type='P' ,fields='ts_code,end_date,bz_item,bz_sales')
+
+#Export the df to excel
+df.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
