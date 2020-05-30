@@ -5,8 +5,11 @@ from rqalpha import run_code
 code = """
 from rqalpha.api import *
 
+
+import numpy as np
+import math
 import Utils.numeric_utils as TuRq
-from datetime import date， datetime, timedelta
+from datetime import date, datetime, timedelta
 import time as t
 import pandas as pd
 import seaborn as sns
@@ -24,119 +27,156 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
-
-#Setup - fundamental section
-snapshot_date = '20200515'
-small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
-small_cap_cutoff_low = 0 #defind the cutoff for small caps lower end （unit=万元）
-pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
-
-#Setup - technical section...
-
-
-#Extract basic stock information
-#sector_full_list = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,is_hs')
-
-
-#Extract basic stock information - company introduction
-#sector_full_list_intro = pro.stock_company(exchange='SZSE', fields='ts_code,chairman,manager,secretary,website,introduction,main_business')
-
-#get daily metrics
-sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,
-                                      fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
-
-#Select small cap stocks with pre-defined cutoffs and with pre-defined PE range
-templist1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(small_cap_cutoff_low, small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, pe_cutoff_up)]
-
-
-#remove stocks that had up limited in the last x days 剔除过去N天内有涨停的的股票
-up_start_date = 20200511 #TODO: this part to be automated later, reference snapshot_date. 改为自动化，这个日期应为 snapshot_date - N天. N 为人工输入
-up_end_date = 20200515 #TODO: this part to be automated later reference snapshot_date。 改为自动化，这个日期应为 snapshot_date 前一天
-
-up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date)['ts_code']
-
-templist2 = templist1[~templist1.ts_code.isin(up_list)]
-t.sleep(1)
-
-#filter on stocks with at least three years trading history #TODO: the three year variable should be an input field 730 改为人工输入变量，以年为单位
-list_days_filter = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,list_date')
-list_days_filter['list_date'] = pd.to_datetime(list_days_filter['list_date'],format='%Y%m%d')
-list_days_filter['snapshot_date'] = snapshot_date
-list_days_filter['snapshot_date'] = pd.to_datetime(list_days_filter['snapshot_date'],format='%Y%m%d')
-list_days_filter['list_days'] = (list_days_filter['snapshot_date'] - list_days_filter['list_date']).dt.days
-list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
-
-templist3 = templist2[~templist2.ts_code.isin(list_days_filter2)]
-
-templist4 =templist3['ts_code'].tolist()
-
-templist5 = TuRq.get_list_of_converted_stock_code(templist4)
-
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
-    context.s1 = templist5
 
-    # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
-    context.SHORTPERIOD = 14
-    context.LONGPERIOD = 60
+    # 选择我们感兴趣的股票
+    context.small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
+    context.small_cap_cutoff_low = 50000 #defind the cutoff for small caps lower end （unit=万元）
+    context.pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
+    
+    #剔除过去x天内有涨停的的股票
+    context.daysx = 5
+    
+    context.TIME_PERIOD = 14
+    context.HIGH_RSI = 80
+    context.LOW_RSI = 30
+    context.ORDER_PERCENT = 0.1
 
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
-    # 开始编写你的主要的算法逻辑
-    # bar_dict[order_book_id] 可以拿到某个证券的bar信息
-    # context.portfolio 可以拿到现在的投资组合状态信息
 
-    # 使用order_shares(id_or_ins, amount)方法进行落单
+    # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
+    d0 = context.now.date()
+    snapshot_date = d0.strftime("%Y%m%d")
+    
+    sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
+    
+    #以股票的 市值(mv) 和 市盈率(PE) 进行筛选
+    list1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(context.small_cap_cutoff_low, context.small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, context.pe_cutoff_up)]
+    
+    #剔除过去x天内有涨停的的股票 (x 在init 定义）
+    
+    up_start_date = d0 - timedelta(days=context.daysx)
+    up_start_date = up_start_date.strftime("%Y%m%d")
+    
+    up_end_date = d0 - timedelta(days=1)
+    up_end_date = up_end_date.strftime("%Y%m%d") 
 
-    # 因为策略需要用到均线，所以需要读取历史数据
-    prices = history_bars(context.s1, context.LONGPERIOD+1, '1d', 'close')
+    up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date)
 
-    # 使用talib计算长短两根均线，均线以array的格式表达
-    short_avg = talib.SMA(prices, context.SHORTPERIOD)
-    long_avg = talib.SMA(prices, context.LONGPERIOD)
+    list2 = list1[~list1.ts_code.isin(up_list)]
 
-    plot("short avg", short_avg[-1])
-    plot("long avg", long_avg[-1])
+    #filter on stocks with at least three years trading history #TODO: the three year variable should be an input field 730 改为人工输入变量，以年为单位
+    list_days_filter = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,list_date')
+    list_days_filter['list_date'] = pd.to_datetime(list_days_filter['list_date'],format='%Y%m%d')
+    list_days_filter['snapshot_date'] = snapshot_date
+    list_days_filter['snapshot_date'] = pd.to_datetime(list_days_filter['snapshot_date'],format='%Y%m%d')
+    list_days_filter['list_days'] = (list_days_filter['snapshot_date'] - list_days_filter['list_date']).dt.days
+    list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
 
-    # 计算现在portfolio中股票的仓位
-    cur_position = get_position(context.s1).quantity
-    # 计算现在portfolio中的现金可以购买多少股票
-    shares = context.portfolio.cash / bar_dict[context.s1].close
+    list3 = list2[~list2.ts_code.isin(list_days_filter2)]
+    
+    list3 = list3['ts_code'].to_list()
+    
+    context.stocks = TuRq.get_list_of_converted_stock_code(list3)
+    
+    for stock in context.stocks:
+        # 读取历史数据
+        prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
 
-    # 如果短均线从上往下跌破长均线，也就是在目前的bar短线平均值低于长线平均值，而上一个bar的短线平均值高于长线平均值
-    if short_avg[-1] - long_avg[-1] < 0 and short_avg[-2] - long_avg[-2] > 0 and cur_position > 0:
-        # 进行清仓
-        order_target_value(context.s1, 0)
+        # 用Talib计算RSI值
+        rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
 
-    # 如果短均线从下往上突破长均线，为入场信号
-    if short_avg[-1] - long_avg[-1] > 0 and short_avg[-2] - long_avg[-2] < 0:
-        # 满仓入股
-        order_shares(context.s1, shares)
+        cur_position = get_position(stock).quantity
+        # 用剩余现金的x%来购买新的股票
+        target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
+        # 当RSI大于设置的上限阀值，清仓该股票
+        if rsi_data > context.HIGH_RSI and cur_position > 0:
+            order_target_value(stock, 0)
+
+        # 当RSI小于设置的下限阀值，用剩余cash的一定比例补仓该股
+        if rsi_data < context.LOW_RSI:
+            logger.info("target available cash caled: " + str(target_available_cash))
+            # 如果剩余的现金不够一手 - 100shares，那么会被ricequant 的order management system reject掉
+            order_value(stock, target_available_cash)
 
 """
 
 config = {
-  "base": {
-    "start_date": "2016-06-01",
-    "end_date": "2019-12-01",
-    "benchmark": "000300.XSHG",
-    "accounts": {
-      "stock": 100000
+    'base': {
+        'start_date': '2016-06-01',
+        'end_date': '2016-06-11',
+        # 回测频率，1d, 1m, tick
+        'frequency': '1d',
+        # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
+        #    'data_bundle_path': './bundle',
+        # 策略文件地址
+        #    'strategy_file': './strategy.py',
+        # 保证金倍率。基于基础保证金水平进行调整
+        'margin_multiplier': 1,
+        # 运行类型。b 为回测，p 为模拟交易，r 为实盘交易
+        'run_type': 'b',
+        # 基准合约
+        'benchmark': '000300.XSHG',
+
+        # 账户类别及初始资金
+        'accounts': {
+            'stock': 1000000
+        },
+    },
+    'extra': {
+        # 是否开启性能分析
+        'enable_profiler': False,
+        # 输出日志等级，有 verbose, info, warning, error 等选项，可以通过设置为 verbose 来查看最详细日志
+        'log_level': 'verbose',
+    },
+    'mod': {
+        # 模拟撮合模块
+        'sys_simulation': {
+            'enabled': True,
+            # 是否开启信号模式。如果开启，限价单将按照指定价格成交，并且不受撮合成交量限制
+            'signal': False,
+            # 撮合方式。current_bar 当前 bar 收盘价成交，next_bar 下一 bar 开盘价成交，best_own 己方最优价格成交（tick 回测使用）
+            # best_counterparty 对手方最优价格成交（tick 回测使用），last 最新价成交（tick 回测使用）
+            'matching_type': 'current_bar',
+            # 是否允许涨跌停状态下买入、卖出
+            'price_limit': False,
+            # 是否开启成交量限制
+            'volume_limit': True,
+            # 按照 bar 数据成交量的一定比例进行限制，超限部分无法在当前 bar 一次性撮合成交
+            'volume_percent': 0.25,
+            # 滑点模型。PriceRatioSlippage 为基于价格比例的滑点模型，TickSizeSlippage 为基于最小价格变动单位的滑点模型
+            'slippage_model': 'PriceRatioSlippage',
+            # 滑点值
+            'slippage': 0,
+        },
+        # 风控模块
+        'sys_risk': {
+            'enabled': True,
+            # 检查可用资金是否足够
+            'validate_cash': True,
+            # 检查可平仓位是否足够
+            'validate_position': True,
+        },
+        # 分析模块
+        'sys_analyser': {
+            'enabled': True,
+            # 是否画图
+            'plot': True,
+            # 指定输出回测报告 csv 路径
+            'report_save_path': None,
+        },
+        'sys_transaction_cost': {
+            'enabled': True,
+            # 设置最小佣金费用
+            'cn_stock_min_commission': 5,
+            # 佣金倍率
+            'commission_multiplier': 1,
+        }
     }
-  },
-  "extra": {
-    "log_level": "verbose",
-  },
-  "mod": {
-    "sys_analyser": {
-      "enabled": True,
-      "plot": True
-    }
-  }
 }
 
 run_code(code, config)
-
-#TODO:　动态复权　就是以策略回测当前日期为基准进行前复权。目的是为了更贴近真实的交易环境。 　

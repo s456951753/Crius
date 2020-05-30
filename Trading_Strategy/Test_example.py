@@ -87,11 +87,11 @@ def handle_bar(context, bar_dict):
 
 config = {
   "base": {
-    "start_date": "2016-06-01",
-    "end_date": "2016-7-01",
+    "start_date": "2019-01-01",
+    "end_date": "2019-09-01",
     "benchmark": "000300.XSHG",
     "accounts": {
-      "stock": 100000
+      "stock": 1000000
     }
   },
   "extra": {
