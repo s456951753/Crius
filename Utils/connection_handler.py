@@ -24,19 +24,21 @@ def call_tushare_api(data_Api: DataApi, api_name, fields, retry_Count=3, retry_m
     already_retry_count = 1
     success = False
     data = pandas.DataFrame.empty
-    while (already_retry_count <= retry_Count):
+
+    while (already_retry_count <= retry_Count and not success):
         try:
-            data = data_Api.query(api_name, fields, kwargs)
+            data = data_Api.query(api_name=api_name, fields=fields, **kwargs)
             success = True
-        except:
+        except Exception as err:
+            log.warning(err)
             already_retry_count = already_retry_count + 1
             log.warning(msg="connection to " +
                             api_name + " has failed. Attempt " + str(already_retry_count))
             if (retry_mode == "linear"):
-                time.sleep(30 * str(already_retry_count))
+                time.sleep(30 * already_retry_count)
                 continue
             elif (retry_mode == "exp"):
-                time.sleep(30 * 2 ^ str(already_retry_count))
+                time.sleep(30 * 2 ^ already_retry_count)
                 continue
             else:
                 time.sleep(30)
@@ -53,5 +55,6 @@ import datetime
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
-call_tushare_api(api_name='daily_basic', data_Api=pro, ts_code='', trade_date=datetime.date.today().strftime("%Y%m%d"),
+call_tushare_api(api_name='daily_basic', data_Api=pro, ts_code='002456.SZ',
+                 trade_date=datetime.date(2020, 5, 29).strftime("%Y%m%d"),
                  fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
