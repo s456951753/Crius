@@ -1,3 +1,4 @@
+#找出列表中重复披露的行,取最近的日期
 # -*- coding: utf-8 -*-
 
 
@@ -54,7 +55,7 @@ fund_list_snapshot2.loc[:, 'uniquecode2'] = fund_list_snapshot2.ts_code + "_" + 
 #找出列表中重复披露的行,取最近的日期
 keep_list = fund_list_snapshot.copy()
 keep_list.loc[:, 'uniquecode1'] = keep_list.ts_code + "_" + keep_list['end_date'].apply(str)
-keep_list1 = keep_list.drop_duplicates(subset=['ts_code', 'end_date'], keep='first')
+keep_list1 = keep_list.drop_duplicates(subset=['ts_code'], keep='first')
 keep_list1 = keep_list1['uniquecode1'].to_list()
 
 #选取列表中唯一披露的行
@@ -76,7 +77,7 @@ fund_list_snapshot_prior2.loc[:, 'uniquecode2'] = fund_list_snapshot_prior2.ts_c
 #找出列表中重复披露的行,取最近的日期
 keep_list_prior = fund_list_snapshot_prior.copy()
 keep_list_prior.loc[:, 'uniquecode1'] = keep_list_prior.ts_code + "_" + keep_list_prior['end_date'].apply(str)
-keep_list_prior1 = keep_list_prior.drop_duplicates(subset=['ts_code', 'end_date'], keep='first')
+keep_list_prior1 = keep_list_prior.drop_duplicates(subset=['ts_code'], keep='first')
 keep_list_prior1 = keep_list_prior1['uniquecode1'].to_list()
 
 #选取列表中唯一披露的行
