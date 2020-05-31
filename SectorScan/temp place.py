@@ -45,11 +45,48 @@ fund_list = pd.read_excel (r'C:\Users\Austin\Desktop\Tushare\Tushare_Fund_data.x
 #本季度基金公司持股
 fund_list_snapshot = fund_list[fund_list.end_date.isin(date_strings)]
 
-#找出列表中重复披露的行,取更旧的日期
-drop_list0 = fund_list_snapshot.copy()
-drop_list1 = drop_list0[:, 'ts_code', 'end_date']
+#新建一个column使得每个row的数据都是唯一的。第一步把end_date 改成string 格式
+fund_list_snapshot2 = fund_list_snapshot.copy()
+fund_list_snapshot2.loc[:, 'end_date2'] = fund_list_snapshot2['end_date'].apply(str)
+fund_list_snapshot2.loc[:, 'uniquecode1'] = fund_list_snapshot2.ts_code + "_" + fund_list_snapshot2.end_date2
+fund_list_snapshot2.loc[:, 'uniquecode2'] = fund_list_snapshot2.ts_code + "_" + fund_list_snapshot2.symbol + "_" + fund_list_snapshot2.end_date2
+
+#找出列表中重复披露的行,取最近的日期
+keep_list = fund_list_snapshot.copy()
+keep_list.loc[:, 'uniquecode1'] = keep_list.ts_code + "_" + keep_list['end_date'].apply(str)
+keep_list1 = keep_list.drop_duplicates(subset=['ts_code', 'end_date'], keep='first')
+keep_list1 = keep_list1['uniquecode1'].to_list()
+
+#选取列表中唯一披露的行
+fund_list_snapshot2 = fund_list_snapshot2[fund_list_snapshot2['uniquecode1'].isin(keep_list1)]
+
+#最终列表整理
+fund_list_snapshot2 = pd.pivot_table(fund_list_snapshot2,index=["symbol"],aggfunc={'stk_mkv_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
+fund_list_snapshot2 = fund_list_snapshot2.sort_values(by='stk_mkv_ratio', ascending=False)
+
+#上季度基金公司持股
+fund_list_snapshot_prior = fund_list[fund_list.end_date.isin(date_strings_prior)]
+
+#新建一个column使得每个row的数据都是唯一的。第一步把end_date 改成string 格式
+fund_list_snapshot_prior2 = fund_list_snapshot_prior.copy()
+fund_list_snapshot_prior2.loc[:, 'end_date2'] = fund_list_snapshot_prior2['end_date'].apply(str)
+fund_list_snapshot_prior2.loc[:, 'uniquecode1'] = fund_list_snapshot_prior2.ts_code + "_" + fund_list_snapshot_prior2.end_date2
+fund_list_snapshot_prior2.loc[:, 'uniquecode2'] = fund_list_snapshot_prior2.ts_code + "_" + fund_list_snapshot_prior2.symbol + "_" + fund_list_snapshot_prior2.end_date2
+
+#找出列表中重复披露的行,取最近的日期
+keep_list_prior = fund_list_snapshot_prior.copy()
+keep_list_prior.loc[:, 'uniquecode1'] = keep_list_prior.ts_code + "_" + keep_list_prior['end_date'].apply(str)
+keep_list_prior1 = keep_list_prior.drop_duplicates(subset=['ts_code', 'end_date'], keep='first')
+keep_list_prior1 = keep_list_prior1['uniquecode1'].to_list()
+
+#选取列表中唯一披露的行
+fund_list_snapshot_prior2 = fund_list_snapshot_prior2[fund_list_snapshot_prior2['uniquecode1'].isin(keep_list_prior1)]
+
+#最终列表整理
+fund_list_snapshot_prior2 = pd.pivot_table(fund_list_snapshot_prior2,index=["symbol"],aggfunc={'stk_mkv_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
+fund_list_snapshot_prior2 = fund_list_snapshot_prior2.sort_values(by='stk_mkv_ratio', ascending=False)
 
 
-drop_list1['size'] = drop_list1.groupby(['ts_code', 'end_date']).count()
-
-print(drop_list1)
+#Export the df to excel
+fund_list_snapshot2.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = True)
+fund_list_snapshot_prior2.to_excel(r'C:\Users\Austin\Desktop\Tushare\list2.xlsx', index = True)
