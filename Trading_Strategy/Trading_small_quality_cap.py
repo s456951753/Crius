@@ -43,7 +43,7 @@ def init(context):
     
     context.TIME_PERIOD = 14
     context.HIGH_RSI = 80
-    context.LOW_RSI = 30
+    context.LOW_RSI = 25
     context.ORDER_PERCENT = 0.1
 
 
@@ -69,6 +69,7 @@ def handle_bar(context, bar_dict):
     up_end_date = up_end_date.strftime("%Y%m%d") 
 
     up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date)
+    up_list = up_list['ts_code'].to_list()
 
     list2 = list1[~list1.ts_code.isin(up_list)]
 
@@ -79,6 +80,7 @@ def handle_bar(context, bar_dict):
     list_days_filter['snapshot_date'] = pd.to_datetime(list_days_filter['snapshot_date'],format='%Y%m%d')
     list_days_filter['list_days'] = (list_days_filter['snapshot_date'] - list_days_filter['list_date']).dt.days
     list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
+    list_days_filter2 = list_days_filter2['ts_code'].to_list()
 
     list3 = list2[~list2.ts_code.isin(list_days_filter2)]
     
