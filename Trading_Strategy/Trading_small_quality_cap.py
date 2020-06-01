@@ -23,6 +23,9 @@ from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_valu
 import Utils.configuration_file_service as config_service
 import tushare as ts
 
+import logging
+
+logger =logging.getLogger('Trading_small_quality_cap')
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
@@ -47,6 +50,7 @@ def init(context):
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
 
+    print("entering handle_bar")
     # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
     d0 = context.now.date()
     snapshot_date = d0.strftime("%Y%m%d")
@@ -81,26 +85,32 @@ def handle_bar(context, bar_dict):
     list3 = list3['ts_code'].to_list()
     
     context.stocks = TuRq.get_list_of_converted_stock_code(list3)
+
+    start_date=(context.now-timedelta(days=14)).strftime('%Y%m%d')
+    
+    print("begin filtering")
     
     for stock in context.stocks:
         # 读取历史数据
-        prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
-
+        # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
+        # replace rqalpha data with tushare data
+        prices = pro.daily(ts_code=stock,start_date=start_date,end_date=snapshot_date)
+        print(stock+" is being rsi analyzed")
         # 用Talib计算RSI值
-        rsi_data = talib.RSI(prices, timeperiod=context.TIME_PERIOD)[-1]
-
+        rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD)[-1]
+        rsi_data=50
         cur_position = get_position(stock).quantity
-        # 用剩余现金的x%来购买新的股票
+        print("用剩余现金的x%来购买新的股票")
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
-        # 当RSI大于设置的上限阀值，清仓该股票
+        print("当RSI大于设置的上限阀值，清仓该股票")
         if rsi_data > context.HIGH_RSI and cur_position > 0:
             order_target_value(stock, 0)
 
-        # 当RSI小于设置的下限阀值，用剩余cash的一定比例补仓该股
+        print("当RSI小于设置的下限阀值，用剩余cash的一定比例补仓该股")
         if rsi_data < context.LOW_RSI:
             logger.info("target available cash caled: " + str(target_available_cash))
-            # 如果剩余的现金不够一手 - 100shares，那么会被ricequant 的order management system reject掉
+            print("如果剩余的现金不够一手 - 100shares，那么会被ricequant 的order management system reject掉")
             order_value(stock, target_available_cash)
 
 """
@@ -108,7 +118,7 @@ def handle_bar(context, bar_dict):
 config = {
     'base': {
         'start_date': '2016-06-01',
-        'end_date': '2016-06-11',
+        'end_date': '2016-08-11',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
