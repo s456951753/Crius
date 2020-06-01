@@ -98,7 +98,6 @@ def handle_bar(context, bar_dict):
         print(stock+" is being rsi analyzed")
         # 用Talib计算RSI值
         rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD)[-1]
-        rsi_data=50
         cur_position = get_position(stock).quantity
         print("用剩余现金的x%来购买新的股票")
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
