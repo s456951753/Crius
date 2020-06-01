@@ -62,8 +62,8 @@ keep_list1 = keep_list1['uniquecode1'].to_list()
 fund_list_snapshot2 = fund_list_snapshot2[fund_list_snapshot2['uniquecode1'].isin(keep_list1)]
 
 #最终列表整理
-fund_list_snapshot2 = pd.pivot_table(fund_list_snapshot2,index=["symbol"],aggfunc={'stk_mkv_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
-fund_list_snapshot2 = fund_list_snapshot2.sort_values(by='stk_mkv_ratio', ascending=False)
+fund_list_snapshot2 = pd.pivot_table(fund_list_snapshot2,index=["symbol"],aggfunc={'stk_float_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
+fund_list_snapshot2 = fund_list_snapshot2.sort_values(by='stk_float_ratio', ascending=False)
 
 #上季度基金公司持股
 fund_list_snapshot_prior = fund_list[fund_list.end_date.isin(date_strings_prior)]
@@ -84,9 +84,8 @@ keep_list_prior1 = keep_list_prior1['uniquecode1'].to_list()
 fund_list_snapshot_prior2 = fund_list_snapshot_prior2[fund_list_snapshot_prior2['uniquecode1'].isin(keep_list_prior1)]
 
 #最终列表整理
-fund_list_snapshot_prior2 = pd.pivot_table(fund_list_snapshot_prior2,index=["symbol"],aggfunc={'stk_mkv_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
-fund_list_snapshot_prior2 = fund_list_snapshot_prior2.sort_values(by='stk_mkv_ratio', ascending=False)
-
+fund_list_snapshot_prior2 = pd.pivot_table(fund_list_snapshot_prior2,index=["symbol"],aggfunc={'stk_float_ratio':np.sum,'ts_code':np.count_nonzero,'mkv':np.sum,'amount':np.sum})
+fund_list_snapshot_prior2 = fund_list_snapshot_prior2.sort_values(by='stk_float_ratio', ascending=False)
 
 #Export the df to excel
 fund_list_snapshot2.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = True)
