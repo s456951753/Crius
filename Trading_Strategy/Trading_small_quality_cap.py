@@ -25,6 +25,7 @@ import tushare as ts
 
 import logging
 
+import builtins
 logger =logging.getLogger('Trading_small_quality_cap')
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
@@ -43,7 +44,7 @@ def init(context):
     
     context.TIME_PERIOD = 14
     context.HIGH_RSI = 80
-    context.LOW_RSI = 25
+    context.LOW_RSI = 30
     context.ORDER_PERCENT = 0.1
 
 
@@ -87,6 +88,7 @@ def handle_bar(context, bar_dict):
     list3 = list3['ts_code'].to_list()
     
     context.stocks = TuRq.get_list_of_converted_stock_code(list3)
+    start_date=(context.now-timedelta(days=30)).strftime('%Y%m%d')
 
     start_date=(context.now-timedelta(days=14)).strftime('%Y%m%d')
     
@@ -96,10 +98,15 @@ def handle_bar(context, bar_dict):
         # 读取历史数据
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
         # replace rqalpha data with tushare data
-        prices = pro.daily(ts_code=stock,start_date=start_date,end_date=snapshot_date)
-        print(stock+" is being rsi analyzed")
+        tusharestock = TuRq.get_converted_stock_code(stock)
+        prices = pro.daily(ts_code=tusharestock,start_date=start_date,end_date=snapshot_date)
+        
         # 用Talib计算RSI值
-        rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD)[-1]
+        if prices.empty:
+            continue    
+        print(prices['close'])
+        rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD).tolist()[-1]
+        print(rsi_data)
         cur_position = get_position(stock).quantity
         print("用剩余现金的x%来购买新的股票")
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
