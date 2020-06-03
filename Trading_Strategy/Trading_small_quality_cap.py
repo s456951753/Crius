@@ -98,7 +98,7 @@ def handle_bar(context, bar_dict):
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
         # replace rqalpha data with tushare data
         tusharestock = TuRq.get_converted_stock_code(stock)
-        prices = ts.pro_ba(ts_code=tusharestock, adj='qfq', start_date=start_date,end_date=snapshot_date)
+        prices = ts.pro_bar(ts_code=tusharestock, adj='qfq', start_date=start_date,end_date=snapshot_date)
 
         # 用Talib计算RSI值
         if prices.empty:
@@ -126,7 +126,7 @@ def handle_bar(context, bar_dict):
 config = {
     'base': {
         'start_date': '2007-06-01',
-        'end_date': '2020-02-11',
+        'end_date': '2007-09-11',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
