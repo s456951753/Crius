@@ -51,7 +51,6 @@ def init(context):
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
 
-    print("entering handle_bar")
     # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
     d0 = context.now.date()
     snapshot_date = d0.strftime("%Y%m%d")
@@ -88,13 +87,13 @@ def handle_bar(context, bar_dict):
     list3 = list3['ts_code'].to_list()
     
     context.stocks = TuRq.get_list_of_converted_stock_code(list3)
-    start_date=(context.now-timedelta(days=30)).strftime('%Y%m%d')
-
-    start_date=(context.now-timedelta(days=14)).strftime('%Y%m%d')
-    
     print("begin filtering")
     
     for stock in context.stocks:
+        print('processing stock:'+stock)
+        # The start date of tushare data retrieving
+        start_date=(context.now-timedelta(days=30)).strftime('%Y%m%d')    
+
         # 读取历史数据
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
         # replace rqalpha data with tushare data
