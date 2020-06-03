@@ -66,10 +66,17 @@ Shenwan_code	industry_name	level
 801230.SI	综合	L1
 """
 
-all_data = pro.query('daily_basic', ts_code='002939.SZ', trade_date=snapshot_date,
-                     fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
+#本季度基金公司持股
+stock_list = stock_list[stock_list['index_code_lv1']==SW_lv1]
+stock_list = stock_list['symbol'].to_list()
 
+print(stock_list)
 
+stock_list_info = []
+for stock_code in stock_list:
+    all_data = pro.query('daily_basic', ts_code=stock_code, trade_date=snapshot_date, fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
+    stock_list_info.append(all_data)
+stock_list_info = pd.concat(stock_list_info)
 
-print(all_data)
+print(stock_list_info)
 
