@@ -40,12 +40,12 @@ def init(context):
     context.pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
     
     #剔除过去x天内有涨停的的股票
-    context.daysx = 5
+    context.daysx = 6
     
     context.TIME_PERIOD = 14
     context.HIGH_RSI = 80
     context.LOW_RSI = 30
-    context.ORDER_PERCENT = 0.1
+    context.ORDER_PERCENT = 0.2
 
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
@@ -62,7 +62,7 @@ def handle_bar(context, bar_dict):
     
     #剔除过去x天内有涨停的的股票 (x 在init 定义）
     
-    up_start_date = d0 - timedelta(days=context.daysx)
+    up_start_date = d0 - timedelta(days=context.daysx) #TODO: change to trading days. (https://tushare.pro/document/2?doc_id=26)
     up_start_date = up_start_date.strftime("%Y%m%d")
     
     up_end_date = d0 - timedelta(days=1)
@@ -82,7 +82,7 @@ def handle_bar(context, bar_dict):
     list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
     list_days_filter2 = list_days_filter2['ts_code'].to_list()
 
-    list3 = list2[~list2.ts_code.isin(list_days_filter2)]
+    list3 = list2[list2.ts_code.isin(list_days_filter2)]
     
     list3 = list3['ts_code'].to_list()
     
@@ -92,25 +92,26 @@ def handle_bar(context, bar_dict):
     for stock in context.stocks:
         print('processing stock:'+stock)
         # The start date of tushare data retrieving
-        start_date=(context.now-timedelta(days=30)).strftime('%Y%m%d')    
+        start_date=(context.now-timedelta(days=30)).strftime('%Y%m%d')   #TODO: link timedelta to context.TIME_PERIOD + 5
 
         # 读取历史数据
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
         # replace rqalpha data with tushare data
         tusharestock = TuRq.get_converted_stock_code(stock)
-        prices = pro.daily(ts_code=tusharestock,start_date=start_date,end_date=snapshot_date)
-        
+        prices = ts.pro_ba(ts_code=tusharestock, adj='qfq', start_date=start_date,end_date=snapshot_date)
+
         # 用Talib计算RSI值
         if prices.empty:
             continue    
         print(prices['close'])
         rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD).tolist()[-1]
         print(rsi_data)
+
         cur_position = get_position(stock).quantity
         print("用剩余现金的x%来购买新的股票")
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
-        print("当RSI大于设置的上限阀值，清仓该股票")
+        print("当RSI大于设置的上限阀值，清仓该股票") #TODO: logo 可视化，来查看股票买卖后账户资金的变化
         if rsi_data > context.HIGH_RSI and cur_position > 0:
             order_target_value(stock, 0)
 
@@ -124,8 +125,8 @@ def handle_bar(context, bar_dict):
 
 config = {
     'base': {
-        'start_date': '2016-06-01',
-        'end_date': '2016-08-11',
+        'start_date': '2007-06-01',
+        'end_date': '2020-02-11',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
