@@ -29,6 +29,6 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
-df = pro.adj_factor(ts_code='000001.SZ', trade_date='')
+df = ts.pro_bar(ts_code='000001.SZ', adj='hfq', start_date='20180101', end_date='20181011')
 
 print(df)
