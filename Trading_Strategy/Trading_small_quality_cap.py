@@ -2,7 +2,7 @@
 
 from rqalpha import run_code
 
-code = """
+#code = """
 from rqalpha.api import *
 
 
