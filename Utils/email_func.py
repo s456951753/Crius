@@ -10,9 +10,15 @@ receiver_email_2 = "ee07b238@gmail.com"
 password = "19880729Yxh!" #("Type your password and press enter: ")
 
 message = """\
-Subject: Hi there
+Subject: Hi Yuan, 
 
-This message is sent from Python."""
+Note the email password is currently exposed. Help to hide it when you get a chance. 
+
+Thanks
+
+Crius autotrade terminal
+
+"""
 
 context = ssl.create_default_context()
 with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
