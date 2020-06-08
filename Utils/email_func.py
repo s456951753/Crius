@@ -10,7 +10,9 @@ receiver_email_2 = "ee07b238@gmail.com"
 password = "19880729Yxh!" #("Type your password and press enter: ")
 
 message = """\
-Subject: Hi Yuan, 
+Subject: Crius update
+
+Hi Yuan, 
 
 Note the email password is currently exposed. Help to hide it when you get a chance. 
 
