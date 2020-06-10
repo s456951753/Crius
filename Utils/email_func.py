@@ -1,4 +1,10 @@
 import smtplib, ssl
+import Utils.configuration_file_service as config_service
+
+#Gmail password saved locally
+password = config_service.getProperty(section_name=config_service.GMAIL_SECTION_NAME,
+                                   property_name=config_service.GM_PASSWORD_NAME)
+
 
 port = 465  # For SSL
 smtp_server = "smtp.gmail.com"
@@ -7,14 +13,23 @@ sender_email = "austin.yun365@gmail.com"  # Enter your address
 receiver_email_1 = "austinyxh@hotmail.com"
 receiver_email_2 = "ee07b238@gmail.com"
 
-password = "19880729Yxh!" #("Type your password and press enter: ")
 
 message = """\
 Subject: Crius update
 
 Hi Yuan, 
 
-Note the email password is currently exposed. Help to hide it when you get a chance. 
+Password is now protected. Please use below to update your local properties section. 
+
+<<>>
+[TOKENS]
+ts_token = 3c311a0c0eb056bfe6c27a161e6cab275649b74245cfd5679a75dca9
+
+
+[GMAIL]
+gm_password = 19880729Yxh!
+
+<<>>
 
 Thanks
 
