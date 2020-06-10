@@ -2,7 +2,7 @@
 
 from rqalpha import run_code
 
-#code = """
+code = """
 from rqalpha.api import *
 
 
@@ -36,7 +36,7 @@ def init(context):
 
     # 选择我们感兴趣的股票
     context.small_cap_cutoff_up = 1150000 #defind the cutoff for small caps upper end （unit=万元）Note the cutoff is consistent with MSCI small cap definition
-    context.small_cap_cutoff_low = 50000 #defind the cutoff for small caps lower end （unit=万元）
+    context.small_cap_cutoff_low = 500000 #defind the cutoff for small caps lower end （unit=万元）
     context.pe_cutoff_up = 30 #defind the cutoff for stock PE ratio
     
     #剔除过去x天内有涨停的的股票
@@ -44,7 +44,7 @@ def init(context):
     
     context.TIME_PERIOD = 14
     context.HIGH_RSI = 80
-    context.LOW_RSI = 30
+    context.LOW_RSI = 20
     context.ORDER_PERCENT = 0.2
 
 
@@ -126,7 +126,7 @@ def handle_bar(context, bar_dict):
 config = {
     'base': {
         'start_date': '2007-06-01',
-        'end_date': '2007-09-11',
+        'end_date': '2007-06-30',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】

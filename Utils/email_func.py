@@ -21,16 +21,6 @@ Hi Yuan,
 
 Password is now protected. Please use below to update your local properties section. 
 
-<<>>
-[TOKENS]
-ts_token = 3c311a0c0eb056bfe6c27a161e6cab275649b74245cfd5679a75dca9
-
-
-[GMAIL]
-gm_password = 19880729Yxh!
-
-<<>>
-
 Thanks
 
 Crius autotrade terminal

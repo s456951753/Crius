@@ -4,8 +4,6 @@ from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_valu
 import logging
 logger =logging.getLogger('Trading_small_quality_cap')
 
-
-
 ## 个股止损
 def security_stoploss(context,loss=0.2):
     if len(context.portfolio.positions)>0:
@@ -45,10 +43,10 @@ def index_stoploss_sicha(index, context, n=60):
 # 根据大盘指数跌幅进行止损
 def index_stoploss_diefu(index, context, n=10, stop_loss_limit=0.03):
     '''
-    当大盘N日内跌幅超过zs，则清仓止损
+    当大盘N日内跌幅超过止损限额，则清仓止损
     '''
     if len(context.portfolio.positions)>0:
-        benchmark_history = #此处取 'benchmark' 所用的指数，要日线行情，取数范围 n。 “close" 为指示呢一列
+        benchmark_history = #TODO: #此处取 'benchmark' 所用的指数，要日线行情，取数范围 n。 “close" 为指示呢一列
         if ((1-float(benchmark_history['close'][-1]/benchmark_history['close'][0])) >= stop_loss_limit):
             logger.info('大盘触及止损线，清仓！')
             for stock in context.portfolio.positions.keys():

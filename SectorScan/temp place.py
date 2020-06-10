@@ -28,6 +28,7 @@ import builtins
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
+ts.set_token(token)
 
 df = ts.pro_bar(ts_code='000001.SZ', adj='hfq', start_date='20180101', end_date='20181011')
 
