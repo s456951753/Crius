@@ -55,6 +55,6 @@ import datetime
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
-call_tushare_api(api_name='daily_basic', data_Api=pro, ts_code='002456.SZ',
-                 trade_date=datetime.date(2020, 5, 29).strftime("%Y%m%d"),
-                 fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
+start_date = (datetime.date.today() - datetime.timedelta(days=14)).strftime('%Y%m%d')
+prices = pro.daily(ts_code='000001.SZ', start_date=start_date, end_date=datetime.date.today().strftime('%Y%m%d'))
+print(prices['close'])

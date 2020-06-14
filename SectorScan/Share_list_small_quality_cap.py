@@ -7,7 +7,6 @@ import time as t
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import talib
 
 #Load Tushare
 from rqalpha.apis.api_base import history_bars, get_position

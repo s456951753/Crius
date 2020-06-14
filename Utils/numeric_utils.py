@@ -6,6 +6,8 @@ import re
 import dateutil
 import datetime
 
+from pandas import DataFrame
+
 
 def get_converted_stock_code(symbol):
     """
@@ -80,3 +82,8 @@ class SymbolInvalidException(Exception):
     def __init__(self, symbol):
         self.symbol = symbol
         self.message = symbol + " is not a valid symbol"
+
+
+def get_last_x_trading_day(list_of_trading_date: DataFrame, x_day_ago=3):
+    list_of_trading_date = list_of_trading_date[list_of_trading_date.is_open == 1]
+    return list_of_trading_date['cal_date'].tolist()[-1 * x_day_ago]
