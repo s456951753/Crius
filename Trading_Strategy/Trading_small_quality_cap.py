@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from rqalpha import run_code
-
 code = """
 from rqalpha.api import *
 
+import sys
 
 import numpy as np
 import math
@@ -21,15 +21,17 @@ from rqalpha.apis.api_base import history_bars, get_position
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_value, order_value
 
 import Utils.configuration_file_service as config_service
+import Utils.numeric_utils as num_util
 import tushare as ts
 
 import logging
-
+import Utils.logging_util as lu
 import builtins
 logger =logging.getLogger('Trading_small_quality_cap')
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
+ts.set_token(token)
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
@@ -47,29 +49,44 @@ def init(context):
     context.LOW_RSI = 20
     context.ORDER_PERCENT = 0.2
 
-
-# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
-def handle_bar(context, bar_dict):
-
-    # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
-    d0 = context.now.date()
-    snapshot_date = d0.strftime("%Y%m%d")
+    context.days_on_market =730
+    context.orders=pd.Series()
+    logger.setLevel("DEBUG")
+    logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     
-    sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
+def handle_bar(context, bar_dict):
+    
+    # 对我们选中的股票集合进行loop，运算每一只股票的RSI数值
+    current_date = context.now.date()
+    snapshot_date = current_date.strftime("%Y%m%d")
+    print("querying calendar")
+    trade_calendar = pro.query('trade_cal', start_date=(current_date- timedelta(days=30)).strftime("%Y%m%d"), end_date=snapshot_date)
+    #if today is not a trading day, skip
+    if trade_calendar['is_open'].tolist()[-1]==0:
+        logger.debug("skipping "+snapshot_date +" because it's not a trading day")
+        pass
+    else:
+        logger.debug("begin trading on "+ snapshot_date)    
+    print("starting trading on " + snapshot_date)
+    sector_full_list_snapshot = pro.query('daily_basic', ts_code='', trade_date=snapshot_date,
+                                          fields='ts_code,turnover_rate_f,volume_ratio,pe_ttm,dv_ratio,free_share,total_mv')
     
     #以股票的 市值(mv) 和 市盈率(PE) 进行筛选
     list1 = sector_full_list_snapshot[sector_full_list_snapshot['total_mv'].between(context.small_cap_cutoff_low, context.small_cap_cutoff_up) & sector_full_list_snapshot['pe_ttm'].between(0.01, context.pe_cutoff_up)]
     
     #剔除过去x天内有涨停的的股票 (x 在init 定义）
     
-    up_start_date = d0 - timedelta(days=context.daysx) #TODO: change to trading days. (https://tushare.pro/document/2?doc_id=26)
-    up_start_date = up_start_date.strftime("%Y%m%d")
-    
-    up_end_date = d0 - timedelta(days=1)
-    up_end_date = up_end_date.strftime("%Y%m%d") 
-
-    up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date)
+    #up_start_date = current_date - timedelta(days=context.daysx) #TODO: change to trading days. (https://tushare.pro/document/2?doc_id=26)
+    #up_start_date = up_start_date.strftime("%Y%m%d")
+    #up_end_date = current_date - timedelta(days=1)
+    #up_end_date = up_end_date.strftime("%Y%m%d")
+    # get trading day
+    up_start_date = num_util.get_last_x_trading_day(list_of_trading_date=trade_calendar,x_day_ago=6)
+    up_end_date = num_util.get_last_x_trading_day(list_of_trading_date=trade_calendar,x_day_ago=2)
+    up_list = pro.limit_list(start_date=up_start_date, end_date=up_end_date,limit_type='U')
     up_list = up_list['ts_code'].to_list()
+    
+    
 
     list2 = list1[~list1.ts_code.isin(up_list)]
 
@@ -79,7 +96,7 @@ def handle_bar(context, bar_dict):
     list_days_filter['snapshot_date'] = snapshot_date
     list_days_filter['snapshot_date'] = pd.to_datetime(list_days_filter['snapshot_date'],format='%Y%m%d')
     list_days_filter['list_days'] = (list_days_filter['snapshot_date'] - list_days_filter['list_date']).dt.days
-    list_days_filter2 = list_days_filter[list_days_filter['list_days'] > 730]
+    list_days_filter2 = list_days_filter[list_days_filter['list_days'] > context.days_on_market]
     list_days_filter2 = list_days_filter2['ts_code'].to_list()
 
     list3 = list2[list2.ts_code.isin(list_days_filter2)]
@@ -87,12 +104,11 @@ def handle_bar(context, bar_dict):
     list3 = list3['ts_code'].to_list()
     
     context.stocks = TuRq.get_list_of_converted_stock_code(list3)
-    print("begin filtering")
     
     for stock in context.stocks:
-        print('processing stock:'+stock)
+        logger.debug('processing stock:'+stock)
         # The start date of tushare data retrieving
-        start_date=(context.now-timedelta(days=30)).strftime('%Y%m%d')   #TODO: link timedelta to context.TIME_PERIOD + 5
+        start_date=(context.now-timedelta(context.TIME_PERIOD + 5)).strftime('%Y%m%d')   #TODO: link timedelta to context.TIME_PERIOD + 5
 
         # 读取历史数据
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
@@ -103,23 +119,37 @@ def handle_bar(context, bar_dict):
         # 用Talib计算RSI值
         if prices.empty:
             continue    
-        print(prices['close'])
         rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD).tolist()[-1]
-        print(rsi_data)
 
         cur_position = get_position(stock).quantity
-        print("用剩余现金的x%来购买新的股票")
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
-        print("当RSI大于设置的上限阀值，清仓该股票") #TODO: logo 可视化，来查看股票买卖后账户资金的变化
         if rsi_data > context.HIGH_RSI and cur_position > 0:
-            order_target_value(stock, 0)
+            logger.debug("当RSI大于设置的上限阀值" + context.HIGH_RSI + ",清仓 "+ stock)  # TODO: logo 可视化，来查看股票买卖后账户资金的变化
+            order=order_target_value(stock, 0)
+            lu.get_info_for_order(order,context.portfolio,logger,logging_level="debug")
+            context.orders.append(order)
 
-        print("当RSI小于设置的下限阀值，用剩余cash的一定比例补仓该股")
         if rsi_data < context.LOW_RSI:
+            logger.debug("当RSI小于设置的下限阀值，用剩余cash的一定比例补仓"+stock)
             logger.info("target available cash caled: " + str(target_available_cash))
-            print("如果剩余的现金不够一手 - 100shares，那么会被ricequant 的order management system reject掉")
-            order_value(stock, target_available_cash)
+            order=order_value(stock, target_available_cash)
+            lu.get_info_for_order(order,context.portfolio,logger,logging_level="debug")
+            context.orders.append(order)
+
+def after_trading(context):
+    logger.info("Conclusion for date " + context.now.date().strftime("%Y%m%d"))
+    logger.info("Cash:" + str(context.portfolio.cash))
+    logger.info("Net value by yesterday:" + str(context.portfolio.static_unit_net_value))
+    logger.info("Net value by today:" + str(context.portfolio.unit_net_value))
+    logger.info("Profit today:" + str(context.portfolio.daily_pnl))
+    logger.info("Annualized return" + str(context.portfolio.annualized_returns))
+    #if(context.now.date().strftime("%Y%m%d") == config.base.end_date.strftime("%Y%m%d")):
+        #context.orders.to_csv('out.csv',index=True)
+        
+
+
+
 
 """
 
