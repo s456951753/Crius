@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-
 from rqalpha import run_code
+
 code = """
 from rqalpha.api import *
+from timeit import default_timer as timer
 
 import sys
 
@@ -106,20 +107,33 @@ def handle_bar(context, bar_dict):
     context.stocks = TuRq.get_list_of_converted_stock_code(list3)
     
     for stock in context.stocks:
+        start = timer()
+
         logger.debug('processing stock:'+stock)
         # The start date of tushare data retrieving
         start_date=(context.now-timedelta(context.TIME_PERIOD + 5)).strftime('%Y%m%d')   #TODO: link timedelta to context.TIME_PERIOD + 5
-
+        
         # 读取历史数据
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
         # replace rqalpha data with tushare data
         tusharestock = TuRq.get_converted_stock_code(stock)
+        end = timer()
+        print('timestamp1 '+str(end - start))
+        start = timer()
+        # TODO - if there is an API to bulky load stock qfq data
         prices = ts.pro_bar(ts_code=tusharestock, adj='qfq', start_date=start_date,end_date=snapshot_date)
-
+        end = timer()
+        print('timestamp2 '+str(end - start))
+        
+        start = timer()
         # 用Talib计算RSI值
         if prices.empty:
             continue    
         rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD).tolist()[-1]
+        end = timer()
+        print('timestamp3 '+str(end - start))
+        
+        start = timer()
 
         cur_position = get_position(stock).quantity
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
@@ -136,16 +150,20 @@ def handle_bar(context, bar_dict):
             order=order_value(stock, target_available_cash)
             lu.get_info_for_order(order,context.portfolio,logger,logging_level="debug")
             context.orders.append(order)
-
+        end = timer()
+        print('timestamp4 '+str(end - start))
 def after_trading(context):
+    start = timer()
     logger.info("Conclusion for date " + context.now.date().strftime("%Y%m%d"))
     logger.info("Cash:" + str(context.portfolio.cash))
     logger.info("Net value by yesterday:" + str(context.portfolio.static_unit_net_value))
     logger.info("Net value by today:" + str(context.portfolio.unit_net_value))
     logger.info("Profit today:" + str(context.portfolio.daily_pnl))
     logger.info("Annualized return" + str(context.portfolio.annualized_returns))
-    #if(context.now.date().strftime("%Y%m%d") == config.base.end_date.strftime("%Y%m%d")):
-        #context.orders.to_csv('out.csv',index=True)
+    if(context.now.date().strftime("%Y%m%d") == context.config.base.end_date.strftime("%Y%m%d")):
+        context.orders.to_csv('out.csv',index=True)
+    end = timer()
+    print('timestamp5'+str(end - start))
         
 
 
@@ -155,8 +173,8 @@ def after_trading(context):
 
 config = {
     'base': {
-        'start_date': '2007-06-01',
-        'end_date': '2007-06-30',
+        'start_date': '2017-07-05',
+        'end_date': '2017-07-31',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
