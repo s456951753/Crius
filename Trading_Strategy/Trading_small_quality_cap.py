@@ -167,7 +167,7 @@ def after_trading(context):
     logger.info("Profit today:" + str(context.portfolio.daily_pnl))
     logger.info("Annualized return:" + str(context.portfolio.annualized_returns))
     if(context.now.date().strftime("%Y%m%d") == context.config.base.end_date.strftime("%Y%m%d")):
-        context.orders.to_csv('out.csv',index=True)
+        pd.DataFrame(context.orders).to_csv('out.csv',index=True)
     #end = timer()
     #print('timestamp5'+str(end - start))
         
@@ -180,7 +180,7 @@ def after_trading(context):
 config = {
     'base': {
         'start_date': '2017-07-07',
-        'end_date': '2017-07-31',
+        'end_date': '2017-07-08',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
