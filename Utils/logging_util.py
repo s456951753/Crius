@@ -13,16 +13,19 @@ def get_info_for_order(order: rqalpha.model.order, portfolio: rqalpha.portfolio,
     if (breaker == 5):
         logger.error("order not finalized in 5 seconds. your script might have stuck")
     logger.info(
-        order.datetime + " order " + order.order_id() + " exercised. " + order.order_book_id() + " fulfilled" + order.filled_quantity() + " at " + order.avg_price())
+        order.datetime.strftime("%Y%m%d") + " order " + str(
+            order.order_id) + " exercised. " + order.order_book_id + " fulfilled " + str(
+            order.filled_quantity) + " at " + str(order.avg_price))
     logger.info(
-        "current cash level" + portfolio.cash() + ". " + "total value is " + portfolio.total_value() + ". total return by today is " + portfolio.total_returns())
+        "current cash level:" + str(portfolio.cash) + ". " + "total value is " + str(
+            portfolio.total_value) + ". total return by today is " + str(portfolio.total_returns))
     if (logging_level == "info"):
         pass
-    logger.debug("detailed info for" + order.order_id() + ": ")
-    if (order.price() == 0):
-        logger.debug("placed: " + order.quantity() + " of " + order.order_book_id())
+    logger.debug("detailed info for " + str(order.order_id) + ": ")
+    if (order.price == 0):
+        logger.debug("placed: " + str(order.quantity) + " of " + str(order.order_book_id))
     else:
-        logger.debug("placed: " + order.quantity() + " at " + order.price())
-    logger.debug("fulfilled: " + order.filled_quantity() + " at " + order.avg_price())
+        logger.debug("placed: " + str(order.quantity) + " at " + str(order.price))
+    logger.debug("fulfilled: " + str(order.filled_quantity) + " at " + str(order.avg_price))
     logger.debug("current positions:")
     logger.debug(portfolio.positions)

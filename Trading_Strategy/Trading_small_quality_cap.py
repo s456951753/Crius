@@ -51,7 +51,7 @@ def init(context):
     context.ORDER_PERCENT = 0.2
 
     context.days_on_market =730
-    context.orders=pd.Series()
+    context.orders=[]
     logger.setLevel("DEBUG")
     logger.addHandler(logging.StreamHandler(stream=sys.stdout))
     
@@ -107,7 +107,7 @@ def handle_bar(context, bar_dict):
     context.stocks = TuRq.get_list_of_converted_stock_code(list3)
     
     for stock in context.stocks:
-        start = timer()
+        #start = timer()
 
         logger.debug('processing stock:'+stock)
         # The start date of tushare data retrieving
@@ -117,53 +117,59 @@ def handle_bar(context, bar_dict):
         # prices = history_bars(stock, context.TIME_PERIOD+1, '1d', 'close')
         # replace rqalpha data with tushare data
         tusharestock = TuRq.get_converted_stock_code(stock)
-        end = timer()
-        print('timestamp1 '+str(end - start))
-        start = timer()
+        #end = timer()
+        #print('timestamp1 '+str(end - start))
+        #start = timer()
         # TODO - if there is an API to bulky load stock qfq data
         prices = ts.pro_bar(ts_code=tusharestock, adj='qfq', start_date=start_date,end_date=snapshot_date)
-        end = timer()
-        print('timestamp2 '+str(end - start))
+        #end = timer()
+        #print('timestamp2 '+str(end - start))
         
-        start = timer()
+        #start = timer()
         # 用Talib计算RSI值
         if prices.empty:
             continue    
         rsi_data = talib.RSI(prices['close'], timeperiod=context.TIME_PERIOD).tolist()[-1]
-        end = timer()
-        print('timestamp3 '+str(end - start))
+        #end = timer()
+        #print('timestamp3 '+str(end - start))
         
-        start = timer()
+        #start = timer()
 
         cur_position = get_position(stock).quantity
         target_available_cash = context.portfolio.cash * context.ORDER_PERCENT
 
         if rsi_data > context.HIGH_RSI and cur_position > 0:
-            logger.debug("当RSI大于设置的上限阀值" + context.HIGH_RSI + ",清仓 "+ stock)  # TODO: logo 可视化，来查看股票买卖后账户资金的变化
+            logger.debug("RSI "+str(rsi_data)+" 大于设置的上限阀值" + context.HIGH_RSI + ",清仓 "+ stock)  # TODO: logo 可视化，来查看股票买卖后账户资金的变化
             order=order_target_value(stock, 0)
+            if(order == None):
+                logger.debug("order is not fulfilled. skip today")
+                continue
             lu.get_info_for_order(order,context.portfolio,logger,logging_level="debug")
             context.orders.append(order)
 
         if rsi_data < context.LOW_RSI:
-            logger.debug("当RSI小于设置的下限阀值，用剩余cash的一定比例补仓"+stock)
+            logger.debug("RSI "+str(rsi_data)+" 小于设置的下限阀值，用剩余cash的一定比例补仓"+stock)
             logger.info("target available cash caled: " + str(target_available_cash))
             order=order_value(stock, target_available_cash)
+            if(order == None):
+                logger.debug("order is not fulfilled. skip today")
+                continue
             lu.get_info_for_order(order,context.portfolio,logger,logging_level="debug")
             context.orders.append(order)
-        end = timer()
-        print('timestamp4 '+str(end - start))
+        #end = timer()
+        #print('timestamp4 '+str(end - start))
 def after_trading(context):
-    start = timer()
+    #start = timer()
     logger.info("Conclusion for date " + context.now.date().strftime("%Y%m%d"))
     logger.info("Cash:" + str(context.portfolio.cash))
     logger.info("Net value by yesterday:" + str(context.portfolio.static_unit_net_value))
     logger.info("Net value by today:" + str(context.portfolio.unit_net_value))
     logger.info("Profit today:" + str(context.portfolio.daily_pnl))
-    logger.info("Annualized return" + str(context.portfolio.annualized_returns))
+    logger.info("Annualized return:" + str(context.portfolio.annualized_returns))
     if(context.now.date().strftime("%Y%m%d") == context.config.base.end_date.strftime("%Y%m%d")):
         context.orders.to_csv('out.csv',index=True)
-    end = timer()
-    print('timestamp5'+str(end - start))
+    #end = timer()
+    #print('timestamp5'+str(end - start))
         
 
 
@@ -173,7 +179,7 @@ def after_trading(context):
 
 config = {
     'base': {
-        'start_date': '2017-07-05',
+        'start_date': '2017-07-07',
         'end_date': '2017-07-31',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
