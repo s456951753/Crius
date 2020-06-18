@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from rqalpha import run_code
 
-code = """
+#code = """
 from rqalpha.api import *
 from timeit import default_timer as timer
 
@@ -180,7 +180,7 @@ def after_trading(context):
 config = {
     'base': {
         'start_date': '2017-07-07',
-        'end_date': '2017-07-08',
+        'end_date': '2017-07-09',
         # 回测频率，1d, 1m, tick
         'frequency': '1d',
         # 回测所需 bundle 数据地址，可设置为 RQPro 终端【个人设置】的【数据下载路径】
