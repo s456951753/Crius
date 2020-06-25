@@ -9,7 +9,7 @@ import pandas as pd
 
 def get_stock_basic(pro, retry_count=3, pause=2):
     """股票列表 数据"""
-    frame = []
+    frame = pd.DataFrame()
     for status in ['L', 'D', 'P']:
         for _ in range(retry_count):
             try:

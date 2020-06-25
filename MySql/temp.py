@@ -28,15 +28,6 @@ from sqlalchemy import create_engine
 from MySql.mysql_tables_structure import Base
 import Utils.mysql_functions as mf
 
-# 创建数据库引擎
-engine = create_engine('mysql://root:3c311a@127.0.0.1/Crius_SQL?charset=utf8mb4')
-conn = engine.connect()
-
-# 创建mysql所有表结构
-Base.metadata.create_all(engine)
-
-# 股票列表
-mf.update_stock_basic(engine, pro, 3, 2)
 
 df = pro.stock_basic(exchange='', list_status='L', \
                      fields='ts_code,symbol,name,area,industry,fullname,enname,market, \
