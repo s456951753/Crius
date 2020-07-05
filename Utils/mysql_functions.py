@@ -19,7 +19,7 @@ def get_stock_basic(pro, retry_count=3, pause=2):
             except:
                 time.sleep(pause)
             else:
-                frame.append(df)
+                frame = frame.append(df)
                 break
 
     return frame

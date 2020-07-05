@@ -19,6 +19,7 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
+
 # coding=utf-8
 
 import pandas as pd
@@ -29,7 +30,7 @@ from MySql.mysql_tables_structure import Base
 import Utils.mysql_functions as mf
 
 # 创建数据库引擎
-engine = create_engine('mysql://root:3c311a@127.0.0.1/Crius_SQL?charset=utf8mb4')
+engine = create_engine(config_service.getDefaultDB())
 conn = engine.connect()
 
 # 创建mysql所有表结构
@@ -38,8 +39,7 @@ Base.metadata.create_all(engine)
 # 股票列表
 mf.update_stock_basic(engine, pro, 3, 2)
 
-df = pro.stock_basic(exchange='', list_status='L', \
-                     fields='ts_code,symbol,name,area,industry,fullname,enname,market, \
-                    exchange,curr_type,list_status,list_date,delist_date,is_hs')
+# df = pro.stock_basic(exchange='', list_status='L',
+# fields='ts_code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_status,list_date,delist_date,is_hs')
 
-print(df)
+# print(df)
