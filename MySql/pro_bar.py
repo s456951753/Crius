@@ -16,40 +16,31 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-class StockBasic(Base):
-    """股票列表
-    is_hs	    str	N	是否沪深港通标的，N否 H沪股通 S深股通
-    list_status	str	N	上市状态： L上市 D退市 P暂停上市
-    exchange	str	N	交易所 SSE上交所 SZSE深交所 HKEX港交所(未上线)
+class ProBar(Base):
+    """A股复权行情
+    不复权	无	空或None
+    前复权	当日收盘价 × 当日复权因子 / 最新复权因子	qfq
+    后复权	当日收盘价 × 当日复权因子	hfq
     """
-    __tablename__ = 'stock_basic'
+    __tablename__ = 'pro_bar'
 
     ts_code = Column(String(10), primary_key=True)  # TS代码
-    symbol = Column(String(10))         # 股票代码
-    name = Column(String(10))           # 股票名称
-    area = Column(String(4))            # 所在地域
-    industry = Column(String(4))        # 所属行业
-    fullname = Column(String(30))       # 股票全称
-    enname = Column(String(100))        # 英文全称
-    market = Column(String(3))          # 市场类型 （主板/中小板/创业板）
-    exchange = Column(String(4))        # 交易所代码
-    curr_type = Column(String(3))       # 交易货币
-    list_status = Column(String(1))     # 上市状态： L上市 D退市 P暂停上市
-    list_date = Column(String(8))       # 上市日期
-    delist_date = Column(String(8))     # 退市日期
-    is_hs = Column(String(1))           # 是否沪深港通标的，N否 H沪股通 S深股通
+    adj = Column(String(4))         # 复权类型(只针对股票)：None未复权 qfq前复权 hfq后复权 , 默认None
+    freq = Column(String(1))           # 数据频度 ：1MIN表示1分钟（1/5/15/30/60分钟） D日线 ，默认D, W=week, M=Month
+    start_date = Column(String(8))       # 开始日期 (格式：YYYYMMDD)
+    end_date = Column(String(8))     # 结束日期 (格式：YYYYMMDD)
 
 # 2. 建立获取tushare数据函数
 
 from sqlalchemy import create_engine
 
-def get_stock_basic(pro, retry_count=3, pause=2):
+def get_pro_bar(pro, retry_count=3, pause=2):
     """数据"""
     frame = pd.DataFrame()
-    for status in ['L', 'D', 'P']:
+    for adjstatus in ['qfq']:
         for _ in range(retry_count):
             try:
-                df = pro.stock_basic(exchange='', list_status=status,
+                df = ts.pro_bar(exchange='', list_status=status,
                                      fields='ts_code,symbol,name,area,industry,fullname,enname,market, \
                                     exchange,curr_type,list_status,list_date,delist_date,is_hs')
             except:

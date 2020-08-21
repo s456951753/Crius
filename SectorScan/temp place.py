@@ -9,8 +9,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import talib
 
-from multiprocessing.dummy import Pool as ThreadPool
-
 #Load Tushare
 from rqalpha.apis.api_base import history_bars, get_position
 from rqalpha.mod.rqalpha_mod_sys_accounts.api.api_stock import order_target_value, order_value
@@ -23,22 +21,13 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
 pro = ts.pro_api(token)
 
 
-#公募基金持仓数据
-list = pro.fund_basic(market='E')
-list = list['ts_code'].to_list()
-
-pool = ThreadPool()
-appended_data = pool.map(pro.fund_portfolio, list)
-pool.close()
-pool.join()
-
-appended_data = []
-for fund_code in list:
-    all_data = pro.fund_portfolio(ts_code=fund_code)
-    appended_data.append(all_data)
-
-appended_data = pd.concat(appended_data)
+#主营业务构成
+df = pro.fina_mainbz_vip(period='20191231', type='P' ,fields='ts_code,end_date,bz_item,bz_sales')
 
 #Export the df to excel
-appended_data.to_excel(r'C:\Users\Austin\Desktop\Tushare\list3.xlsx', index = False)
+df.to_excel(r'C:\Users\Austin\Desktop\Tushare\fina_mainbz_vip.xlsx', index = False)
 
+
+data = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+#Export the df to excel
+data.to_excel(r'C:\Users\Austin\Desktop\Tushare\stock_basic.xlsx', index = False)
