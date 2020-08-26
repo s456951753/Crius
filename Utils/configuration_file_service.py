@@ -13,12 +13,18 @@ DATABASE_DB_NAME = "db_name"
 DATABASE_USER_NAME = "db_user"
 DATABASE_PASSWORD = "db_pw"
 
+DATA_CONFIG_SECTION_NAME = "DATA_CONFIG"
+DATA_CONFIG_YEAR_GRANULARITY_NAME = "year"
+
 config = ConfigParser()
 config.read("../crius.properties")
 
 
 def getProperty(section_name, property_name):
-    return config[section_name][property_name]
+    if (config.has_option(section_name, property_name)):
+        return config[section_name][property_name]
+    else:
+        return None
 
 
 def getDefaultDB():
