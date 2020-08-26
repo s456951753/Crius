@@ -11,7 +11,8 @@ def getTableName(year: int, base_name) -> str:
     basename_startyear_endyear
     Specifically, the difference between start and end year will be 4 so each table contains 5 years of data
     - ranges will be like 1990 to 1994, 1995 to 1999
-    :param date: date of the data you want to insert
+
+    :param year: year of the data you want to insert
     :param base_name: name of the api
     :return: basename_startyear_endyear. If the given year is not in the range supported (1990 to current year),
     basename_9995_10000 wil be returned. Hopefully we are not using this piece of shit by then.
