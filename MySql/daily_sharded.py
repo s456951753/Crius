@@ -6,6 +6,8 @@ import time
 import datetime
 import logging
 
+from sqlalchemy.exc import IntegrityError
+
 import Utils.configuration_file_service as config_service
 import Utils.DB_utils as dbUtil
 
@@ -84,8 +86,7 @@ def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pau
     start_year = int(start_date[0:4])
     end_year = int(end_date[0:4])
     for i in range(start_year, end_year):
-        logging.info("starting processing year " + str(i))
-        print("starting processing year " + str(i))
+        logger.debug("starting processing year " + str(i))
         if (i == start_year):
             temp_start_date = start_date
             temp_end_date = str(i) + "1231"
@@ -96,9 +97,15 @@ def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pau
             temp_start_date = str(i) + "0101"
             temp_end_date = str(i) + "1231"
         for value in codes['ts_code']:
+            logger.debug("processing " + value + " for date " + temp_start_date + "-" + temp_end_date)
             df = get_daily_code(pro, value, temp_start_date, temp_end_date, retry_count, pause)
-            df.to_sql(dbUtil.getTableName(i, "daily"), engine, if_exists='append', index=False)
-
+            try:
+                df.to_sql(dbUtil.getTableName(i, "daily"), engine, if_exists='append', index=False)
+            except IntegrityError as err:
+                logger.error("error processing data for year" + str(i) + " stock code " + value)
+                print("error processing data for year" + str(i) + " stock code " + value)
+                logger.error(err)
+                print(err)
 
 def update_daily_date(engine, pro, date, retry_count, pause):
     """日期方式更新 日线行情"""
