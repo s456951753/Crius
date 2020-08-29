@@ -1,8 +1,10 @@
 """
 Refactored so more suitable for sharded daily qfq data table
 """
+import sys
 import time
 import datetime
+import logging
 
 import Utils.configuration_file_service as config_service
 import Utils.DB_utils as dbUtil
@@ -79,9 +81,11 @@ def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pau
     股票代码方式更新 日线行情
 
     """
-    start_year = int(start_date[0:3])
-    end_year = int(end_date[0:3])
+    start_year = int(start_date[0:4])
+    end_year = int(end_date[0:4])
     for i in range(start_year, end_year):
+        logging.info("starting processing year " + str(i))
+        print("starting processing year " + str(i))
         if (i == start_year):
             temp_start_date = start_date
             temp_end_date = str(i) + "1231"
@@ -99,10 +103,26 @@ def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pau
 def update_daily_date(engine, pro, date, retry_count, pause):
     """日期方式更新 日线行情"""
     df = get_daily_date(pro, date, retry_count, pause)
-    df.to_sql(dbUtil.getTableName(int(date[0:3]), "daily"), engine, if_exists='append', index=False)
+    df.to_sql(dbUtil.getTableName(int(date[0:4]), "daily"), engine, if_exists='append', index=False)
 
 
 # 4. 主程序
+logger = logging.getLogger('daily_sharded')
+logger.setLevel(logging.DEBUG)
+
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setStream(sys.stdout)
+# create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# add formatter to ch
+ch.setFormatter(formatter)
+
+# add ch to logger
+logger.addHandler(ch)
+
 engine = create_engine(config_service.getDefaultDB())
 conn = engine.connect()
 

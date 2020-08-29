@@ -25,7 +25,8 @@ def getTableName(year: int, base_name) -> str:
             break
     if (tableName == None):
         logging.error(
-            "The provided year argument is outside of the storage time interval. Please double check. We currently support between " + str(
+            "The provided year argument " + str(
+                year) + " is outside of the storage time interval. Please double check. We currently support between " + str(
                 VERY_BEGINNING_YEAR) + " and " + str(datetime.date.today().year))
         return base_name + '_' + str(9995) + '_' + str(10000)
     return tableName
