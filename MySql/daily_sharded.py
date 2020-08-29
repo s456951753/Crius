@@ -86,7 +86,7 @@ def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pau
     start_year = int(start_date[0:4])
     end_year = int(end_date[0:4])
     for i in range(start_year, end_year):
-        logger.debug("starting processing year " + str(i))
+        logger.info("starting processing year " + str(i))
         if (i == start_year):
             temp_start_date = start_date
             temp_end_date = str(i) + "1231"
@@ -115,20 +115,21 @@ def update_daily_date(engine, pro, date, retry_count, pause):
 
 # 4. 主程序
 logger = logging.getLogger('daily_sharded')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # create console handler and set level to debug
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
 ch.setStream(sys.stdout)
+fi = logging.FileHandler(filename="../engine.log")
+
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
 # add formatter to ch
 ch.setFormatter(formatter)
-
+fi.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
+logger.addHandler(fi)
 
 engine = create_engine(config_service.getDefaultDB())
 conn = engine.connect()

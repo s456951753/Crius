@@ -136,3 +136,9 @@ dmypy.json
 #configuration file
 crius.properties
 
+#TEST OUTPUT FILE
+Trading_Strategy/out.csv
+Trading_Strategy/out1.csv
+
+#log file
+engine.log
