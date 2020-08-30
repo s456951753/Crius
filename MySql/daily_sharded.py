@@ -75,10 +75,14 @@ def get_daily_date(pro, date, retry_count=3, pause=2):
 
 def get_ts_code(engine):
     """查询ts_code"""
-    return pd.read_sql('select ts_code from stock_basic', engine)
+    codes = pd.read_sql('select ts_code from stock_basic', engine)
 
 
-def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pause):
+def get_trade_cal(pro, start_date, end_date):
+    return pro.trade_cal(start_date=start_date, end_date=end_date, is_open='1')["cal_date"]
+
+
+def update_bulk_daily_using_code_by_year(engine, pro, codes, start_date, end_date, retry_count, pause):
     """
     股票代码方式更新 日线行情
 
@@ -107,13 +111,19 @@ def update_bulk_daily(engine, pro, codes, start_date, end_date, retry_count, pau
                 logger.error(err)
                 print(err)
 
+
 def update_daily_date(engine, pro, date, retry_count, pause):
     """日期方式更新 日线行情"""
     df = get_daily_date(pro, date, retry_count, pause)
     df.to_sql(dbUtil.getTableName(int(date[0:4]), "daily"), engine, if_exists='append', index=False)
 
 
+def update_bulk_daily_by_day_in_year(engine, pro, start_date, end_date):
+    trade_cal = get_trade_cal(pro, )
+
+
 # 4. 主程序
+
 logger = logging.getLogger('daily_sharded')
 logger.setLevel(logging.INFO)
 
@@ -143,4 +153,4 @@ for i in years.keys():
 metadata.create_all(engine)
 
 codes = get_ts_code(engine)
-update_bulk_daily(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
+update_bulk_daily_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
