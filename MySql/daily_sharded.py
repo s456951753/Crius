@@ -75,7 +75,7 @@ def get_daily_date(pro, date, retry_count=3, pause=2):
 
 def get_ts_code(engine):
     """查询ts_code"""
-    codes = pd.read_sql('select ts_code from stock_basic', engine)
+    return pd.read_sql('select ts_code from stock_basic', engine)
 
 
 def get_trade_cal(pro, start_date, end_date):
