@@ -11,7 +11,7 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
 pro = ts.pro_api(token)
 
 
-# 创建表结构
+# 1. 创建表结构
 
 from sqlalchemy import Column, String, Float
 from sqlalchemy.ext.declarative import declarative_base

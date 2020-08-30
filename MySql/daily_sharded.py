@@ -143,4 +143,5 @@ for i in years.keys():
 metadata.create_all(engine)
 
 codes = get_ts_code(engine)
-update_bulk_daily(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
+#update_bulk_daily(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
+update_bulk_daily(engine, pro, codes, '19921219', '19951219', 3, 1)

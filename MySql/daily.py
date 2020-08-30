@@ -105,5 +105,5 @@ Base.metadata.create_all(engine)
 # 列表, 根据需要增删 日线行情 数据  单次提取*4000*条
 #delete_daily(engine, '19901219', '20191231')
 codes = get_ts_code(engine)
-update_all_daily(engine, pro, codes, '19901219', '20051231', 3, 2)
+update_all_daily(engine, pro, codes, '19901219', '20190830', 3, 2)
 #update_daily_date(engine, pro, '20190702', 3, 2)
