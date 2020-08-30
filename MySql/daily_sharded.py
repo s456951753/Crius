@@ -118,14 +118,24 @@ def update_daily_date(engine, pro, date, retry_count, pause):
     df.to_sql(dbUtil.getTableName(int(date[0:4]), "daily"), engine, if_exists='append', index=False)
 
 
-def update_bulk_daily_by_day_in_year(engine, pro, start_date, end_date):
-    trade_cal = get_trade_cal(pro, )
+def update_bulk_daily_by_day(engine, pro, start_date, end_date):
+    trade_cal = get_trade_cal(pro, start_date, end_date)
+    for a_day in trade_cal:
+        logger.debug("started processing data for date " + a_day)
+        df = get_daily_date(pro=pro, date=a_day)
+        try:
+            df.to_sql(dbUtil.getTableName(int(a_day[0:4]), "daily"), engine, if_exists='append', index=False)
+        except IntegrityError as err:
+            logger.error("error processing data for date" + str(a_day) + " as data for that day already exists")
+            logger.error(err)
+        except Exception as e:
+            logger.error("error processing data for date" + str(a_day))
 
 
 # 4. 主程序
 
 logger = logging.getLogger('daily_sharded')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
 ch = logging.StreamHandler()
@@ -152,5 +162,6 @@ for i in years.keys():
 
 metadata.create_all(engine)
 
-codes = get_ts_code(engine)
-update_bulk_daily_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
+# codes = get_ts_code(engine)
+# update_bulk_daily_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
+update_bulk_daily_by_day(pro=pro, start_date='19901219', end_date=datetime.date.today().strftime("%Y%m%d"))
