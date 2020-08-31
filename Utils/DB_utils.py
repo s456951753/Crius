@@ -1,4 +1,6 @@
 import datetime
+import math
+
 import Utils.configuration_file_service as config_service
 import logging
 
@@ -51,3 +53,33 @@ def getYears() -> {}:
         # startEndYears.append(str(thisYear-5) + '_' + str(thisYear))
         startEndYears[thisYear - 5] = thisYear - 1
     return startEndYears
+
+
+def getTableRange(base_name: str, start_date: str, end_date: str):
+    """
+    Get a collection of table names based on the given date
+    :param base_name:
+    :param start_date:
+    :param end_date:
+    :return: an array of table names, or None if date is not valid
+    """
+    assert int(start_date) <= int(end_date)
+    assert VERY_BEGINNING_YEAR <= int(start_date[0:4]) <= datetime.date.today().year
+    assert VERY_BEGINNING_YEAR <= int(end_date[0:4]) <= datetime.date.today().year
+
+    start_year = int(start_date[0:4])
+    end_year = int(end_date[0:4])
+    years = getYears()
+
+    names = []
+    end_year_pos = []
+    # as long as start or end year of a table is covered, we know
+    for i in years.keys():
+        if (start_year <= years.get(i) <= end_year or start_year <= i <= end_year):
+            names.append(base_name + '_' + str(i) + '_' + str(years.get(i)))
+    # if nothing in names, gap between input & output < 4 years, not enough to cover one table
+    if len(names) == 0:
+        for i in years.keys():
+            if (i <= start_year and years.get(i) >= end_year):
+                names.append(base_name + '_' + str(i) + '_' + str(years.get(i)))
+    return names
