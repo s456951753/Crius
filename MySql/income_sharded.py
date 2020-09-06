@@ -141,12 +141,12 @@ def update_bulk_income_by_ts_code_and_insert_by_year(base_name, engine, pro, cod
                                     index=False)
             logger.debug("end inserting data into DB")
         except Exception as e:
-            failed_count = failed_count + 1
             failed.append(code)
             logger.error(e)
             logger.error("error processing data for code " + code)
     if (failed_count < failed_tolerent):
         logger.warning("retrying now.")
+        failed_count = failed_count + 1
         update_bulk_income_by_ts_code_and_insert_by_year(base_name=base_name, engine=engine, pro=pro,
                                                          codes=pd.DataFrame(failed, columns=['ts_code']),
                                                          sharding_column=sharding_column,
