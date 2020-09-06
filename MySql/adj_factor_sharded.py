@@ -69,7 +69,7 @@ def get_trade_cal(pro, start_date, end_date):
 def update_daily_date(engine, pro, date, retry_count, pause):
     """日期方式更新 复权因子 行情"""
     df = get_adj_factor_date(pro, date, retry_count, pause)
-    df.to_sql(dbUtil.getTableName(int(date[0:4]), "daily"), engine, if_exists='append', index=False)
+    df.to_sql(dbUtil.getTableName(int(date[0:4]), "adj_factor"), engine, if_exists='append', index=False)
 
 
 def update_bulk_adj_factor_by_day(engine, pro, start_date, end_date):
@@ -79,7 +79,7 @@ def update_bulk_adj_factor_by_day(engine, pro, start_date, end_date):
         df = get_adj_factor_date(pro=pro, date=a_day)
         try:
             logger.debug("start inserting data into DB")
-            df.to_sql(dbUtil.getTableName(int(a_day[0:4]), "daily"), engine, if_exists='append', index=False)
+            df.to_sql(dbUtil.getTableName(int(a_day[0:4]), "adj_factor"), engine, if_exists='append', index=False)
             logger.debug("end inserting data into DB")
         except IntegrityError as err:
             logger.error("error processing data for date" + str(a_day) + " as data for that day already exists")

@@ -20,6 +20,6 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
 pro = ts.pro_api(token)
 
 
-df = pro.adj_factor(ts_code='', trade_date=date)
+df = pro.adj_factor(ts_code='', trade_date='20001219')
 
 print(df)
