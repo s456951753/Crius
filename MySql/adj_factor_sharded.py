@@ -29,48 +29,22 @@ def getTableMeta(year: int, metadata: MetaData) -> Table:
     :return: a Table object representing the table structure
     """
     return Table(
-        dbUtil.getTableName(year, "daily"), metadata,
+        dbUtil.getTableName(year, "adj_factor"), metadata,
         Column("id", INT, primary_key=True),
         Column("ts_code", String(10)),  # 股票代码
         Column("trade_date", String(8)),  # 交易日期
-        Column("open", Float),  # 开盘价
-        Column("high", Float),  # 最高价
-        Column("low", Float),  # 最低价
-        Column("close", Float),  # 收盘价
-        Column("pre_close", Float),  # 昨收价
-        Column("change", Float),  # 涨跌额
-        Column("pct_chg", Float),  # 涨跌幅 （未复权，如果是复权请用 通用行情接口 ）
-        Column("vol", Float),  # 成交量 （手）
-        Column("amount", Float)  # 成交额 （千元）
+        Column("adj_factor", Float),  # 复权因子
     )
 
 
 # 2. 建立获取tushare数据函数
 
-def get_daily_code(pro, ts_code, start_date, end_date, retry_count=3, pause=2):
-    """股票代码方式获取 日线行情 数据"""
-    for _ in range(retry_count):
-        try:
-            logger.debug("start calling tushare api")
-            df = pro.daily(ts_code=ts_code, start_date=start_date, end_date=end_date,
-                           fields='ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount')
-            logger.debug("end calling tushare api")
-
-        except Exception as e:
-            logger.error("error pulling data from tushare for date " + start_date)
-            logger.error(e)
-            time.sleep(pause)
-        else:
-            return df
-
-
-def get_daily_date(pro, date, retry_count=3, pause=2):
-    """日期方式获取 日线行情 数据"""
+def get_adj_factor_date(pro, date, retry_count=3, pause=2):
+    """日期方式获取 复权因子 数据"""
     for _ in range(retry_count):
         try:
             logger.debug("starting calling tushare api")
-            df = pro.daily(trade_date=date,
-                           fields='ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount')
+            df = pro.adj_factor(ts_code='', trade_date=date)
             logger.debug("end calling tushare api")
         except Exception as e:
             logger.error("error pulling data from tushare for date " + date)
@@ -92,47 +66,17 @@ def get_trade_cal(pro, start_date, end_date):
     return pro.trade_cal(start_date=start_date, end_date=end_date, is_open='1')["cal_date"]
 
 
-def update_bulk_daily_using_code_by_year(engine, pro, codes, start_date, end_date, retry_count, pause):
-    """
-    股票代码方式更新 日线行情
-
-    """
-    start_year = int(start_date[0:4])
-    end_year = int(end_date[0:4])
-    for i in range(start_year, end_year):
-        logger.info("starting processing year " + str(i))
-        if (i == start_year):
-            temp_start_date = start_date
-            temp_end_date = str(i) + "1231"
-        elif (i == end_year):
-            temp_start_date = str(i) + "0101"
-            temp_end_date = end_date
-        else:
-            temp_start_date = str(i) + "0101"
-            temp_end_date = str(i) + "1231"
-        for value in codes['ts_code']:
-            logger.debug("processing " + value + " for date " + temp_start_date + "-" + temp_end_date)
-            df = get_daily_code(pro, value, temp_start_date, temp_end_date, retry_count, pause)
-            try:
-                logger.debug("start inserting data into DB")
-                df.to_sql(dbUtil.getTableName(i, "daily"), engine, if_exists='append', index=False)
-                logger.debug("end inserting data into DB")
-            except IntegrityError as err:
-                logger.error("error processing data for year" + str(i) + " stock code " + value)
-                logger.error(err)
-
-
 def update_daily_date(engine, pro, date, retry_count, pause):
-    """日期方式更新 日线行情"""
-    df = get_daily_date(pro, date, retry_count, pause)
+    """日期方式更新 复权因子 行情"""
+    df = get_adj_factor_date(pro, date, retry_count, pause)
     df.to_sql(dbUtil.getTableName(int(date[0:4]), "daily"), engine, if_exists='append', index=False)
 
 
-def update_bulk_daily_by_day(engine, pro, start_date, end_date):
+def update_bulk_adj_factor_by_day(engine, pro, start_date, end_date):
     trade_cal = get_trade_cal(pro, start_date, end_date)
     for a_day in trade_cal:
         logger.debug("started processing data for date " + a_day)
-        df = get_daily_date(pro=pro, date=a_day)
+        df = get_adj_factor_date(pro=pro, date=a_day)
         try:
             logger.debug("start inserting data into DB")
             df.to_sql(dbUtil.getTableName(int(a_day[0:4]), "daily"), engine, if_exists='append', index=False)
@@ -146,7 +90,7 @@ def update_bulk_daily_by_day(engine, pro, start_date, end_date):
 
 # 4. 主程序
 
-logger = logging.getLogger('daily_sharded')
+logger = logging.getLogger('adj_factor')
 logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
@@ -177,4 +121,4 @@ metadata.create_all(engine)
 # codes = get_ts_code(engine)
 # update_bulk_daily_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
 
-update_bulk_daily_by_day(engine=engine, pro=pro, start_date='20190529', end_date=datetime.date.today().strftime("%Y%m%d"))
+update_bulk_adj_factor_by_day(engine=engine, pro=pro, start_date='19901219', end_date=datetime.date.today().strftime("%Y%m%d"))
