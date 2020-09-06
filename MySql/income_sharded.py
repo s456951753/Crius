@@ -108,16 +108,16 @@ def update_bulk_income_by_period_and_ts_code(base_name, engine, pro, codes, star
             logger.debug("started processing data for " + codes.iloc[rownum]['ts_code'] + " for period " + i)
             if (int(codes.iloc[rownum]['list_date'][0:4]) <= int(i[1:5]) or int(
                     codes.iloc[rownum]['list_date'][0:4]) <= int(i[6:10])):
-                to_insert = pro.income_vip(ts_code=codes.iloc[rownum]['ts_code'], start_date=i[1:5] + '0101',
-                                           end_date=i[6:10] + '1231')
                 try:
+                    to_insert = pro.income_vip(ts_code=codes.iloc[rownum]['ts_code'], start_date=i[1:5] + '0101',
+                                               end_date=i[6:10] + '1231')
                     logger.debug("start inserting data into DB")
                     to_insert.to_sql(base_name + i, engine, if_exists='append', index=False)
                     logger.debug("end inserting data into DB")
                 except Exception as e:
+                    logger.error(e)
                     logger.error(
                         "error processing data for range " + str(i) + " for code " + codes.iloc[rownum]['ts_code'])
-                    logger.error(e)
 
 
 logger = logging.getLogger('income_sharded')
@@ -150,5 +150,5 @@ metadata.create_all(engine)
 
 df = get_ts_code_and_list_date(engine)
 
-update_bulk_income_by_period_and_ts_code(base_name='income', engine=engine, pro=pro, codes=df, start_date='19901219',
+update_bulk_income_by_period_and_ts_code(base_name='income', engine=engine, pro=pro, codes=df, start_date='19950101',
                                          end_date=datetime.date.today().strftime("%Y%m%d"))
