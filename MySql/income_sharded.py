@@ -134,6 +134,9 @@ def update_bulk_income_by_ts_code_and_insert_by_year(base_name, engine, pro, cod
             distinct_years = set(to_insert[sharding_column].str[0:4])
             for year in distinct_years:
                 year_section = to_insert[to_insert[sharding_column].str[0:4] == year]
+                if (year == None):
+                    year = 9999
+                    year_section = to_insert[pd.isna(to_insert[sharding_column]) == True]
                 year_section.to_sql(dbUtil.getTableName(int(year), base_name=base_name), engine, if_exists='append',
                                     index=False)
             logger.debug("end inserting data into DB")
@@ -142,14 +145,13 @@ def update_bulk_income_by_ts_code_and_insert_by_year(base_name, engine, pro, cod
             failed.append(code)
             logger.error(e)
             logger.error("error processing data for code " + code)
-        finally:
-            if (failed_count < failed_tolerent):
-                update_bulk_income_by_ts_code_and_insert_by_year(base_name=base_name, engine=engine, pro=pro,
-                                                                 codes=pd.DataFrame(failed, columns=['ts_code']),
-                                                                 sharding_column=sharding_column,
-                                                                 failed_count=failed_count)
-            else:
-                logger.error("the below code has failed after maximum attempts. " + failed)
+        if (failed_count < failed_tolerent):
+            update_bulk_income_by_ts_code_and_insert_by_year(base_name=base_name, engine=engine, pro=pro,
+                                                             codes=pd.DataFrame(failed, columns=['ts_code']),
+                                                             sharding_column=sharding_column,
+                                                             failed_count=failed_count)
+        else:
+            logger.error("the below code has failed after maximum attempts. " + failed)
 
 logger = logging.getLogger('income_sharded')
 logger.setLevel(logging.DEBUG)
