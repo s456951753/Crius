@@ -94,6 +94,9 @@ def getTableMeta(year: int, metadata: MetaData) -> Table:
         Column("update_flag", String(3))
     )
 
+def get_ts_code(engine):
+    """查询ts_code"""
+    return pd.read_sql('select ts_code from stock_basic', engine)
 
 def get_ts_code_and_list_date(engine):
     """查询ts_code"""
@@ -119,6 +122,34 @@ def update_bulk_income_by_period_and_ts_code(base_name, engine, pro, codes, star
                     logger.error(
                         "error processing data for range " + str(i) + " for code " + codes.iloc[rownum]['ts_code'])
 
+
+def update_bulk_income_by_ts_code_and_insert_by_year(base_name, engine, pro, codes, sharding_column, failed_count=0,
+                                                     failed_tolerent=3):
+    failed = []
+    for code in codes['ts_code']:
+        logger.debug("started processing data for " + code)
+        try:
+            to_insert = pro.income_vip(ts_code=code)
+            logger.debug("start inserting data into DB")
+            distinct_years = set(to_insert[sharding_column].str[0:4])
+            for year in distinct_years:
+                year_section = to_insert[to_insert[sharding_column].str[0:4] == year]
+                year_section.to_sql(dbUtil.getTableName(int(year), base_name=base_name), engine, if_exists='append',
+                                    index=False)
+            logger.debug("end inserting data into DB")
+        except Exception as e:
+            failed_count = failed_count + 1
+            failed.append(code)
+            logger.error(e)
+            logger.error("error processing data for code " + code)
+        finally:
+            if (failed_count < failed_tolerent):
+                update_bulk_income_by_ts_code_and_insert_by_year(base_name=base_name, engine=engine, pro=pro,
+                                                                 codes=pd.DataFrame(failed, columns=['ts_code']),
+                                                                 sharding_column=sharding_column,
+                                                                 failed_count=failed_count)
+            else:
+                logger.error("the below code has failed after maximum attempts. " + failed)
 
 logger = logging.getLogger('income_sharded')
 logger.setLevel(logging.DEBUG)
@@ -148,7 +179,10 @@ for i in years.keys():
 
 metadata.create_all(engine)
 
-df = get_ts_code_and_list_date(engine)
-
-update_bulk_income_by_period_and_ts_code(base_name='income', engine=engine, pro=pro, codes=df, start_date='19950101',
-                                         end_date=datetime.date.today().strftime("%Y%m%d"))
+# df = get_ts_code_and_list_date(engine)
+df = get_ts_code(engine)
+print(df)
+# update_bulk_income_by_period_and_ts_code(base_name='income', engine=engine, pro=pro, codes=df, start_date='19950101',
+# end_date=datetime.date.today().strftime("%Y%m%d"))
+update_bulk_income_by_ts_code_and_insert_by_year(base_name='income', engine=engine, pro=pro, codes=df,
+                                                 sharding_column='f_ann_date')
