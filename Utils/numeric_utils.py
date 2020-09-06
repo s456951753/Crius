@@ -87,3 +87,10 @@ class SymbolInvalidException(Exception):
 def get_last_x_trading_day(list_of_trading_date: DataFrame, x_day_ago=3):
     list_of_trading_date = list_of_trading_date[list_of_trading_date.is_open == 1]
     return list_of_trading_date['cal_date'].tolist()[-1 * x_day_ago]
+
+
+def get_quarter_start_end_date(quarter: int):
+    start_of_quarter = ['0101', '0401', '0701', '1001']
+    end_of_quarter = ['0331', '0630', '0930', '1231']
+
+    return {start_of_quarter[quarter], end_of_quarter[quarter]}
