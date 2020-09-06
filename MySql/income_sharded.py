@@ -145,13 +145,14 @@ def update_bulk_income_by_ts_code_and_insert_by_year(base_name, engine, pro, cod
             failed.append(code)
             logger.error(e)
             logger.error("error processing data for code " + code)
-        if (failed_count < failed_tolerent):
-            update_bulk_income_by_ts_code_and_insert_by_year(base_name=base_name, engine=engine, pro=pro,
-                                                             codes=pd.DataFrame(failed, columns=['ts_code']),
-                                                             sharding_column=sharding_column,
-                                                             failed_count=failed_count)
-        else:
-            logger.error("the below code has failed after maximum attempts. " + failed)
+    if (failed_count < failed_tolerent):
+        logger.warning("retrying now.")
+        update_bulk_income_by_ts_code_and_insert_by_year(base_name=base_name, engine=engine, pro=pro,
+                                                         codes=pd.DataFrame(failed, columns=['ts_code']),
+                                                         sharding_column=sharding_column,
+                                                         failed_count=failed_count)
+    else:
+        logger.error("the below code has failed after maximum attempts. " + ','.join(failed))
 
 logger = logging.getLogger('income_sharded')
 logger.setLevel(logging.DEBUG)
