@@ -13,7 +13,7 @@ import Utils.DB_utils as dbUtil
 
 import pandas as pd
 import tushare as ts
-from sqlalchemy import Column, String, Float, MetaData, Table, create_engine
+from sqlalchemy import Column, String, Float, MetaData, Table, create_engine, INT
 
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
@@ -30,8 +30,9 @@ def getTableMeta(year: int, metadata: MetaData) -> Table:
     """
     return Table(
         dbUtil.getTableName(year, "daily"), metadata,
-        Column("ts_code", String(10), primary_key=True),  # 股票代码
-        Column("trade_date", String(8), primary_key=True),  # 交易日期
+        Column("id", INT, primary_key=True),
+        Column("ts_code", String(10)),  # 股票代码
+        Column("trade_date", String(8)),  # 交易日期
         Column("open", Float),  # 开盘价
         Column("high", Float),  # 最高价
         Column("low", Float),  # 最低价
@@ -50,9 +51,14 @@ def get_daily_code(pro, ts_code, start_date, end_date, retry_count=3, pause=2):
     """股票代码方式获取 日线行情 数据"""
     for _ in range(retry_count):
         try:
+            logger.debug("start calling tushare api")
             df = pro.daily(ts_code=ts_code, start_date=start_date, end_date=end_date,
                            fields='ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount')
-        except:
+            logger.debug("end calling tushare api")
+
+        except Exception as e:
+            logger.error("error pulling data from tushare for date " + start_date)
+            logger.error(e)
             time.sleep(pause)
         else:
             return df
@@ -62,9 +68,13 @@ def get_daily_date(pro, date, retry_count=3, pause=2):
     """日期方式获取 日线行情 数据"""
     for _ in range(retry_count):
         try:
+            logger.debug("starting calling tushare api")
             df = pro.daily(trade_date=date,
                            fields='ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount')
-        except:
+            logger.debug("end calling tushare api")
+        except Exception as e:
+            logger.error("error pulling data from tushare for date " + date)
+            logger.error(e)
             time.sleep(pause)
         else:
             return df
@@ -104,12 +114,12 @@ def update_bulk_daily_using_code_by_year(engine, pro, codes, start_date, end_dat
             logger.debug("processing " + value + " for date " + temp_start_date + "-" + temp_end_date)
             df = get_daily_code(pro, value, temp_start_date, temp_end_date, retry_count, pause)
             try:
+                logger.debug("start inserting data into DB")
                 df.to_sql(dbUtil.getTableName(i, "daily"), engine, if_exists='append', index=False)
+                logger.debug("end inserting data into DB")
             except IntegrityError as err:
                 logger.error("error processing data for year" + str(i) + " stock code " + value)
-                print("error processing data for year" + str(i) + " stock code " + value)
                 logger.error(err)
-                print(err)
 
 
 def update_daily_date(engine, pro, date, retry_count, pause):
@@ -124,13 +134,15 @@ def update_bulk_daily_by_day(engine, pro, start_date, end_date):
         logger.debug("started processing data for date " + a_day)
         df = get_daily_date(pro=pro, date=a_day)
         try:
+            logger.debug("start inserting data into DB")
             df.to_sql(dbUtil.getTableName(int(a_day[0:4]), "daily"), engine, if_exists='append', index=False)
+            logger.debug("end inserting data into DB")
         except IntegrityError as err:
             logger.error("error processing data for date" + str(a_day) + " as data for that day already exists")
             logger.error(err)
         except Exception as e:
             logger.error("error processing data for date" + str(a_day))
-
+            logger.error(e)
 
 # 4. 主程序
 
@@ -164,5 +176,5 @@ metadata.create_all(engine)
 
 # codes = get_ts_code(engine)
 # update_bulk_daily_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
-#update_bulk_daily_by_day(engine, pro=pro, start_date='19901219', end_date=datetime.date.today().strftime("%Y%m%d"))
-update_bulk_daily_by_day(engine, pro=pro, start_date='20180904', end_date='20200830')
+update_bulk_daily_by_day(engine=engine, pro=pro, start_date='20050824',
+                         end_date=datetime.date.today().strftime("%Y%m%d"))
