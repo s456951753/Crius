@@ -183,7 +183,6 @@ metadata.create_all(engine)
 
 # df = get_ts_code_and_list_date(engine)
 df = get_ts_code(engine)
-print(df)
 # update_bulk_income_by_period_and_ts_code(base_name='income', engine=engine, pro=pro, codes=df, start_date='19950101',
 # end_date=datetime.date.today().strftime("%Y%m%d"))
 update_bulk_income_by_ts_code_and_insert_by_year(base_name='income', engine=engine, pro=pro, codes=df,
