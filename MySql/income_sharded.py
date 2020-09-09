@@ -32,66 +32,66 @@ def getTableMeta(year: int, metadata: MetaData) -> Table:
         Column("end_date", String(8)),
         Column("report_type", String(3)),
         Column("comp_type", String(3)),
-        Column("basic_eps", Float),
-        Column("diluted_eps", Float),
-        Column("total_revenue", Float),
-        Column("revenue", Float),
-        Column("int_income", Float),
-        Column("prem_earned", Float),
-        Column("comm_income", Float),
-        Column("n_commis_income", Float),
-        Column("n_oth_income", Float),
-        Column("n_oth_b_income", Float),
-        Column("prem_income", Float),
-        Column("out_prem", Float),
-        Column("une_prem_reser", Float),
-        Column("reins_income", Float),
-        Column("n_sec_tb_income", Float),
-        Column("n_sec_uw_income", Float),
-        Column("n_asset_mg_income", Float),
-        Column("oth_b_income", Float),
-        Column("fv_value_chg_gain", Float),
-        Column("invest_income", Float),
-        Column("ass_invest_income", Float),
-        Column("forex_gain", Float),
-        Column("total_cogs", Float),
-        Column("oper_cost", Float),
-        Column("int_exp", Float),
-        Column("comm_exp", Float),
-        Column("biz_tax_surchg", Float),
-        Column("sell_exp", Float),
-        Column("admin_exp", Float),
-        Column("fin_exp", Float),
-        Column("assets_impair_loss", Float),
-        Column("prem_refund", Float),
-        Column("compens_payout", Float),
-        Column("reser_insur_liab", Float),
-        Column("div_payt", Float),
-        Column("reins_exp", Float),
-        Column("oper_exp", Float),
-        Column("compens_payout_refu", Float),
-        Column("insur_reser_refu", Float),
-        Column("reins_cost_refund", Float),
-        Column("other_bus_cost", Float),
-        Column("operate_profit", Float),
-        Column("non_oper_income", Float),
-        Column("non_oper_exp", Float),
-        Column("nca_disploss", Float),
-        Column("total_profit", Float),
-        Column("income_tax", Float),
-        Column("n_income", Float),
-        Column("n_income_attr_p", Float),
-        Column("minority_gain", Float),
-        Column("oth_compr_income", Float),
-        Column("t_compr_income", Float),
-        Column("compr_inc_attr_p", Float),
-        Column("compr_inc_attr_m_s", Float),
-        Column("ebit", Float),
-        Column("ebitda", Float),
-        Column("insurance_exp", Float),
-        Column("undist_profit", Float),
-        Column("distable_profit", Float),
-        Column("update_flag", String(3))
+        Column("basic_eps", Float),  # 基本每股收益
+        Column("diluted_eps", Float),  # 稀释每股收益
+        Column("total_revenue", Float),  # 营业总收入
+        Column("revenue", Float),  # 营业收入
+        Column("int_income", Float),  # 利息收入
+        Column("prem_earned", Float),  # 已赚保费
+        Column("comm_income", Float),  # 手续费及佣金收入
+        Column("n_commis_income", Float),  # 手续费及佣金净收入
+        Column("n_oth_income", Float),  # 其他经营净收益
+        Column("n_oth_b_income", Float),  # 加:其他业务净收益
+        Column("prem_income", Float),  # 保险业务收入
+        Column("out_prem", Float),  # 减:分出保费
+        Column("une_prem_reser", Float),  # 提取未到期责任准备金
+        Column("reins_income", Float),  # 其中:分保费收入
+        Column("n_sec_tb_income", Float),  # 代理买卖证券业务净收入
+        Column("n_sec_uw_income", Float),  # 证券承销业务净收入
+        Column("n_asset_mg_income", Float),  # 受托客户资产管理业务净收入
+        Column("oth_b_income", Float),  # 其他业务收入
+        Column("fv_value_chg_gain", Float),  # 加:公允价值变动净收益
+        Column("invest_income", Float),  # 加:投资净收益
+        Column("ass_invest_income", Float),  # 其中:对联营企业和合营企业的投资收益
+        Column("forex_gain", Float),  # 加:汇兑净收益
+        Column("total_cogs", Float),  # 营业总成本
+        Column("oper_cost", Float),  # 减:营业成本
+        Column("int_exp", Float),  # 减:利息支出
+        Column("comm_exp", Float),  # 减:手续费及佣金支出
+        Column("biz_tax_surchg", Float),  # 减:营业税金及附加
+        Column("sell_exp", Float),  # 减:销售费用
+        Column("admin_exp", Float),  # 减:管理费用
+        Column("fin_exp", Float),  # 减:财务费用
+        Column("assets_impair_loss", Float),  # 减:资产减值损失
+        Column("prem_refund", Float),  # 退保金
+        Column("compens_payout", Float),  # 赔付总支出
+        Column("reser_insur_liab", Float),  # 提取保险责任准备金
+        Column("div_payt", Float),  # 保户红利支出
+        Column("reins_exp", Float),  # 分保费用
+        Column("oper_exp", Float),  # 营业支出
+        Column("compens_payout_refu", Float),  # 减:摊回赔付支出
+        Column("insur_reser_refu", Float),  # 减:摊回保险责任准备金
+        Column("reins_cost_refund", Float),  # 减:摊回分保费用
+        Column("other_bus_cost", Float),  # 其他业务成本
+        Column("operate_profit", Float),  # 营业利润
+        Column("non_oper_income", Float),  # 加:营业外收入
+        Column("non_oper_exp", Float),  # 减:营业外支出
+        Column("nca_disploss", Float),  # 其中:减:非流动资产处置净损失
+        Column("total_profit", Float),  # 利润总额
+        Column("income_tax", Float),  # 所得税费用
+        Column("n_income", Float),  # 净利润(含少数股东损益)
+        Column("n_income_attr_p", Float),  # 净利润(不含少数股东损益)
+        Column("minority_gain", Float),  # 少数股东损益
+        Column("oth_compr_income", Float),  # 其他综合收益
+        Column("t_compr_income", Float),  # 综合收益总额
+        Column("compr_inc_attr_p", Float),  # 归属于母公司(或股东)的综合收益总额
+        Column("compr_inc_attr_m_s", Float),  # 归属于少数股东的综合收益总额
+        Column("ebit", Float),  # 息税前利润
+        Column("ebitda", Float),  # 息税折旧摊销前利润
+        Column("insurance_exp", Float),  # 保险业务支出
+        Column("undist_profit", Float),  # 年初未分配利润
+        Column("distable_profit", Float),  # 可分配利润
+        Column("update_flag", Float)  # 更新标识，0未修改1更正过
     )
 
 def get_ts_code(engine):
