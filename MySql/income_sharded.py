@@ -186,5 +186,13 @@ metadata.create_all(engine)
 df = get_ts_code(engine)
 # update_bulk_income_by_period_and_ts_code(base_name='income', engine=engine, pro=pro, codes=df, start_date='19950101',
 # end_date=datetime.date.today().strftime("%Y%m%d"))
+
 update_bulk_income_by_ts_code_and_insert_by_year(base_name='income', engine=engine, pro=pro, codes=df,
                                                  sharding_column='f_ann_date')
+
+# For failed codes
+# array = ['000001.SZ','000002.SZ']
+# codes = pd.DataFrame(array, columns=['ts_code']),
+
+# update_bulk_income_by_ts_code_and_insert_by_year(base_name='income', engine=engine, pro=pro, codes=codes,
+#                                                 sharding_column='f_ann_date')
