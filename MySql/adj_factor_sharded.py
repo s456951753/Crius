@@ -121,4 +121,4 @@ metadata.create_all(engine)
 # codes = get_ts_code(engine)
 # update_bulk_daily_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
 
-update_bulk_adj_factor_by_day(engine=engine, pro=pro, start_date='19901219', end_date=datetime.date.today().strftime("%Y%m%d"))
+update_bulk_adj_factor_by_day(engine=engine, pro=pro, start_date='20040527', end_date=datetime.date.today().strftime("%Y%m%d"))

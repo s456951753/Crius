@@ -20,6 +20,6 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
 pro = ts.pro_api(token)
 
 
-df = pro.adj_factor(ts_code='', trade_date='20001219')
+df = pro.cashflow(ts_code='000001.SZ', start_date='20180101', end_date='20180110')
 
 print(df)
