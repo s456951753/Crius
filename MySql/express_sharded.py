@@ -91,7 +91,7 @@ def update_bulk_express_by_ts_code_and_insert_by_year(base_name, engine, pro, co
     for code in codes['ts_code']:
         logger.debug("started processing data for " + code)
         try:
-            to_insert = pro.express_vip(ts_code=code)
+            to_insert = pro.express_vip(ts_code=code, fields='ts_code,ann_date,end_date,revenue,operate_profit,total_profit,n_income,total_assets,total_hldr_eqy_exc_min_int,diluted_eps,diluted_roe,yoy_net_profit,bps,yoy_sales,yoy_op,yoy_tp,yoy_dedu_np,yoy_eps,yoy_roe,growth_assets,yoy_equity,growth_bps,or_last_year,op_last_year,tp_last_year,np_last_year,eps_last_year,open_net_assets,open_bps')
             logger.debug("start inserting data into DB")
             distinct_years = set(to_insert[sharding_column].str[0:4])
             for year in distinct_years:
