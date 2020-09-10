@@ -62,7 +62,9 @@ def get_moneyflow_code(pro, ts_code, start_date, end_date, retry_count=3, pause=
         try:
             logger.debug("start calling tushare api")
             df = pro.moneyflow(ts_code=ts_code, start_date=start_date, end_date=end_date,
-                           fields='ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount')
+                           fields='ts_code,trade_date,buy_sm_vol,buy_sm_amount,sell_sm_vol,sell_sm_amount,buy_md_vol,\
+                           buy_md_amount,sell_md_vol,sell_md_amount,buy_lg_vol,buy_lg_amount,sell_lg_vol,sell_lg_amount,\
+                           buy_elg_vol,buy_elg_amount,sell_elg_vol,sell_elg_amount,net_mf_vol,net_mf_amount')
             logger.debug("end calling tushare api")
 
         except Exception as e:
@@ -79,7 +81,9 @@ def get_moneyflow_date(pro, date, retry_count=3, pause=2):
         try:
             logger.debug("starting calling tushare api")
             df = pro.moneyflow(trade_date=date,
-                           fields='ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount')
+                           fields='ts_code,trade_date,buy_sm_vol,buy_sm_amount,sell_sm_vol,sell_sm_amount,buy_md_vol,\
+                           buy_md_amount,sell_md_vol,sell_md_amount,buy_lg_vol,buy_lg_amount,sell_lg_vol,sell_lg_amount,\
+                           buy_elg_vol,buy_elg_amount,sell_elg_vol,sell_elg_amount,net_mf_vol,net_mf_amount')
             logger.debug("end calling tushare api")
         except Exception as e:
             logger.error("error pulling data from tushare for date " + date)
@@ -186,4 +190,4 @@ metadata.create_all(engine)
 # codes = get_ts_code(engine)
 # update_bulk_moneyflow_using_code_by_year(engine, pro, codes, '19901219', datetime.date.today().strftime("%Y%m%d"), 3, 1)
 
-update_bulk_moneyflow_by_day(engine=engine, pro=pro, start_date='20190529', end_date=datetime.date.today().strftime("%Y%m%d"))
+update_bulk_moneyflow_by_day(engine=engine, pro=pro, start_date='19901219', end_date=datetime.date.today().strftime("%Y%m%d"))

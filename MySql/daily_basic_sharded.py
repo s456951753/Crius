@@ -48,7 +48,7 @@ def getTableMeta(year: int, metadata: MetaData) -> Table:
         Column("float_share", Float),  # 流通股本 （万股）
         Column("free_share", Float),  # 由流通股本 （万）
         Column("total_mv", Float),  # 总市值 （万元）
-        Column("circ_mv	float", Float),  # 流通市值（万元）
+        Column("circ_mv", Float)  # 流通市值（万元）
     )
 
 # 2. 建立获取tushare数据函数

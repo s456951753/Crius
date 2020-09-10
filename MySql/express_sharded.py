@@ -75,7 +75,7 @@ def update_bulk_express_by_period_and_ts_code(base_name, engine, pro, codes, sta
                     codes.iloc[rownum]['list_date'][0:4]) <= int(i[6:10])):
                 try:
                     to_insert = pro.express_vip(ts_code=codes.iloc[rownum]['ts_code'], start_date=i[1:5] + '0101',
-                                               end_date=i[6:10] + '1231')
+                                               end_date=i[6:10] + '1231', fields='ts_code,ann_date,end_date,revenue,operate_profit,total_profit,n_income,total_assets,total_hldr_eqy_exc_min_int,diluted_eps,diluted_roe,yoy_net_profit,bps,yoy_sales,yoy_op,yoy_tp,yoy_dedu_np,yoy_eps,yoy_roe,growth_assets,yoy_equity,growth_bps,or_last_year,op_last_year,tp_last_year,np_last_year,eps_last_year,open_net_assets,open_bps')
                     logger.debug("start inserting data into DB")
                     to_insert.to_sql(base_name + i, engine, if_exists='append', index=False)
                     logger.debug("end inserting data into DB")
@@ -149,4 +149,4 @@ df = get_ts_code(engine)
 # update_bulk_express_by_period_and_ts_code(base_name='express', engine=engine, pro=pro, codes=df, start_date='19950101',
 # end_date=datetime.date.today().strftime("%Y%m%d"))
 update_bulk_express_by_ts_code_and_insert_by_year(base_name='express', engine=engine, pro=pro, codes=df,
-                                                 sharding_column='f_ann_date')
+                                                 sharding_column='ann_date')
