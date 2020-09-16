@@ -19,7 +19,35 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
 
+engine = create_engine(config_service.getDefaultDB())
+conn = engine.connect()
 
-df = pro.cashflow(ts_code='000001.SZ', start_date='20180101', end_date='20180110')
+import mysql.connector as mysql
 
-print(df)
+mydb = mysql.connect(
+        host="127.0.0.1",
+        user="root",
+        passwd="3c311a",
+       database="crius_sql")
+
+def deleteDuplicates():
+    mycursor = mydb.cursor()
+    get_dup_query = "select id from (select min(x.id) as id,x.ts_code,x.trade_date from (SELECT id,new_daily_2015_2019.ts_code as ts_code,new_daily_2015_2019.trade_date as trade_date FROM new_daily_2015_2019 INNER JOIN (SELECT trade_date,ts_code FROM new_daily_2015_2019 GROUP BY trade_date,ts_code HAVING COUNT(id) > 1) dup ON new_daily_2015_2019.trade_date = dup.trade_date and new_daily_2015_2019.ts_code = dup.ts_code)x GROUP BY x.trade_date,x.ts_code)y;"
+    mycursor.execute(get_dup_query)
+    databaseIds = mycursor.fetchall()
+    for id in databaseIds:
+        id_value = id[0]
+        delete_query = "DELETE FROM new_daily_2015_2019 WHERE id = '{0}';".format(id_value)
+        #print("id : ",id[0])
+        mycursor.execute(delete_query)
+        print(delete_query)
+    mycursor.close()
+    mydb.commit()
+
+
+def main():
+    deleteDuplicates()
+
+
+if __name__ == "__main__":
+    main()
