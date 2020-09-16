@@ -39,7 +39,7 @@ def deleteDuplicates():
     mycursor.execute(get_dup_query)
     logger.debug("get_dup_query_executed")
     databaseIds = mycursor.fetchall()
-    logger.debug("fetchall")
+    print("Total rows are:  ", len(databaseIds))
     for id in databaseIds:
         id_value = id[0]
         delete_query = "DELETE FROM new_daily_2015_2019 WHERE id = '{0}';".format(id_value)
