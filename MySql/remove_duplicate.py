@@ -22,27 +22,39 @@ pro = ts.pro_api(token)
 engine = create_engine(config_service.getDefaultDB())
 conn = engine.connect()
 
-start_date = 20150101
-end_date = 20191231
+logger = logging.getLogger('daily_sharded')
+logger.setLevel(logging.DEBUG)
 
-ts_code_list = pd.read_sql('select ts_code from stock_basic',engine)["ts_code"]
+import mysql.connector as mysql
 
-cal_date_list = pro.trade_cal(start_date=start_date, end_date=end_date, is_open='1')["cal_date"]
+mydb = mysql.connect(
+        host="127.0.0.1",
+        user="root",
+        passwd="3c311a",
+       database="crius_sql")
 
-table_name = "new_daily_2015_2019"
+def deleteDuplicates():
+    mycursor = mydb.cursor()
+    get_dup_query = "select id from (select min(x.id) as id,x.ts_code,x.trade_date from (SELECT id,new_daily_2015_2019.ts_code as ts_code,new_daily_2015_2019.trade_date as trade_date FROM new_daily_2015_2019 INNER JOIN (SELECT trade_date,ts_code FROM new_daily_2015_2019 GROUP BY trade_date,ts_code HAVING COUNT(id) > 1) dup ON new_daily_2015_2019.trade_date = dup.trade_date and new_daily_2015_2019.ts_code = dup.ts_code)x GROUP BY x.trade_date,x.ts_code)y;"
+    mycursor.execute(get_dup_query)
+    logger.debug("get_dup_query_executed")
+    databaseIds = mycursor.fetchall()
+    logger.debug("fetchall")
+    for id in databaseIds:
+        id_value = id[0]
+        delete_query = "DELETE FROM new_daily_2015_2019 WHERE id = '{0}';".format(id_value)
+        #print("id : ",id[0])
+        mycursor.execute(delete_query)
+        print(delete_query)
+    mycursor.close()
+    logger.debug("mycursor_close")
+    mydb.commit()
+    logger.debug("mydb_commit")
 
-#for ts_code in ts_code_list:
-#    for date in cal_date_list:
-#        df=pd.read_sql("select ts_code, trade_date from "+ table_name + " where " + "ts_code=\"" + ts_code+ "\" and trade_date between "
-#                       + str(start_date) + " and " + str(end_date),engine)
-#        print(df)
+
+def main():
+    deleteDuplicates()
 
 
-df=pd.read_sql("select ts_code, trade_date, count(*) from new_daily_2015_2019 group by ts_code, trade_date having count(*) > 1",engine)
-print(df)
-
-df2=pd.read_sql("select id from new_daily_2015_2019",engine)
-print(df2)
-
-
-#cursor = engine.cursor()
+if __name__ == "__main__":
+    main()
