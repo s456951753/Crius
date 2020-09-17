@@ -68,9 +68,10 @@ def get_missing_dates(pro, engine, ts_code, dates, interface_type):
     retry_count = 0
     missing_from_tushare = 0
     number_of_inserted_rows = 0
+    isSuccessful = False
     for date in dates:
         if (interface_type == 'daily'):
-            while (retry_count < 3):
+            while (retry_count < 3 and not isSuccessful):
                 try:
                     df = pro.daily(ts_code=ts_code, start_date=date, end_date=date)
                     isSuccessful = True
@@ -92,6 +93,7 @@ def get_missing_dates(pro, engine, ts_code, dates, interface_type):
 
 def check_integrity_worker(base_name, table_name, code, start_date, end_date, engine):
     retry_count = 0
+    isSuccessful = False
     df = get_from_table_by_tscode_and_tradedateint(table_name=table_name,
                                                    ts_code=code, start_date=start_date, end_date=end_date,
                                                    engine=engine)
@@ -99,7 +101,7 @@ def check_integrity_worker(base_name, table_name, code, start_date, end_date, en
     # standard_size=len(list(filter(lambda x:list_date<=x<=int(table_end),trade_cal)))
     standard_date = list(map(int, get_trade_cal(pro, str(start_date), str(end_date))))
     standard_size = len(standard_date)
-    while (retry_count < 3):
+    while (retry_count < 3 and not isSuccessful):
         try:
             suspend_day_count = get_suspended_day_count(pro=pro, ts_code=code, start_date=str(start_date),
                                                         end_date=str(end_date))
