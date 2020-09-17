@@ -132,7 +132,7 @@ def check_integrity_worker(base_name, table_name, code, start_date, end_date, en
                     " and " + str(end_date) + " have been inserted into db")
         elif db_data_size + suspend_day_count == standard_size:
             logger.debug(
-                code + " for table " + base_name + " " + str(start_date) + " " + str(end_date)) + " is correct"
+                code + " for table " + base_name + " " + str(start_date) + " " + str(end_date) + " is correct")
         elif db_data_size + suspend_day_count > standard_size:
             logger.error(
                 "Data duplicate for " + code + " between date " + str(start_date) + " and " + str(end_date))
