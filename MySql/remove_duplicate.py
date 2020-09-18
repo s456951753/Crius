@@ -42,16 +42,18 @@ logger.addHandler(fi)
 import mysql.connector as mysql
 
 mydb = mysql.connect(
-        host="127.0.0.1",
-        user="root",
-        passwd="3c311a",
-       database="crius_sql")
+        host=config_service.getDefaultDB_cursor_host(),
+        user=config_service.getDefaultDB_cursor_user(),
+        passwd=config_service.getDefaultDB_cursor_passwd(),
+       database=config_service.getDefaultDB_cursor_database(),)
 
-def deleteDuplicates():
+db_table = "new_daily_2015_2019"
+
+def deleteDuplicates(db_table):
     stop = False
     while (not stop):
         mycursor = mydb.cursor()
-        get_dup_query = "select id from (select min(x.id) as id,x.ts_code,x.trade_date from (SELECT id,new_daily_2015_2019.ts_code as ts_code,new_daily_2015_2019.trade_date as trade_date FROM new_daily_2015_2019 INNER JOIN (SELECT trade_date,ts_code FROM new_daily_2015_2019 GROUP BY trade_date,ts_code HAVING COUNT(id) > 1) dup ON new_daily_2015_2019.trade_date = dup.trade_date and new_daily_2015_2019.ts_code = dup.ts_code)x GROUP BY x.trade_date,x.ts_code)y;"
+        get_dup_query = "select id from (select min(x.id) as id,x.ts_code,x.trade_date from (SELECT id," + db_table + ".ts_code as ts_code," + db_table + ".trade_date as trade_date FROM " + db_table + " INNER JOIN (SELECT trade_date,ts_code FROM " + db_table + " GROUP BY trade_date,ts_code HAVING COUNT(id) > 1) dup ON " + db_table + ".trade_date = dup.trade_date and " + db_table + ".ts_code = dup.ts_code)x GROUP BY x.trade_date,x.ts_code)y;"
         mycursor.execute(get_dup_query)
         databaseIds = mycursor.fetchall()
         print("Total rows are:  ", len(databaseIds))
@@ -59,7 +61,7 @@ def deleteDuplicates():
             stop = True
         for id in databaseIds:
             id_value = id[0]
-            delete_query = "DELETE FROM new_daily_2015_2019 WHERE id = '{0}';".format(id_value)
+            delete_query = "DELETE FROM " + db_table + " WHERE id = '{0}';".format(id_value)
             # print("id : ",id[0])
             mycursor.execute(delete_query)
             print(delete_query)
@@ -76,3 +78,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# 主程序
+
+fruits = ["apple", "banana", "cherry"]
+for x in fruits:
+  print(x)
