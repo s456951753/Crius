@@ -1,3 +1,6 @@
+import logging
+import sys
+
 import rqalpha.portfolio
 import rqalpha.model.order
 import time
@@ -29,3 +32,30 @@ def get_info_for_order(order: rqalpha.model.order, portfolio: rqalpha.portfolio,
     logger.debug("fulfilled: " + str(order.filled_quantity) + " at " + str(order.avg_price))
     logger.debug("current positions:")
     logger.debug(portfolio.positions)
+
+
+def get_logger(base_name, file_name="engine"):
+    """
+    get a logger that write logs to both stdout and a file. Default logging level is info so remember to
+    :param base_name:
+    :param file_name:
+    :param logging_level:
+    :return:
+    """
+    logger = logging.getLogger(base_name)
+    logger.setLevel(logging.INFO)
+
+    # create console handler and set level to debug
+    ch = logging.StreamHandler()
+    ch.setStream(sys.stdout)
+    fi = logging.FileHandler(filename="..//" + file_name + ".log")
+
+    # create formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # add formatter to ch
+    ch.setFormatter(formatter)
+    fi.setFormatter(formatter)
+    # add ch to logger
+    logger.addHandler(ch)
+    logger.addHandler(fi)
+    return logger

@@ -9,6 +9,8 @@ import Utils.configuration_file_service as config_service
 import Utils.DB_utils as dbUtil
 import tushare as ts
 
+from Utils import logging_util
+
 
 def get_ts_code_and_list_date(engine):
     return pd.read_sql('select ts_code,list_date from stock_basic', engine)
@@ -24,9 +26,10 @@ def get_suspended_day_count(pro, ts_code, start_date, end_date):
     return df.size
 
 
-def check_integrity_daily_data_table(base_name: str, engine, pro):
+def check_integrity_daily_data_table(base_name: str, engine, pro, skipping_year_start: []):
     """
 
+    :param skipping_year:
     :param base_name:
     :param engine:
     :return:
@@ -35,6 +38,10 @@ def check_integrity_daily_data_table(base_name: str, engine, pro):
     codes = get_ts_code_and_list_date(engine)
     years = dbUtil.getYears()
     table_range = {}
+    if (len(skipping_year_start) > 0):
+        for i in skipping_year_start:
+            if (years.get(i) != None):
+                years.pop(i)
     for start_year in years.keys():
         table_range[int(str(start_year) + "0101")] = int(str(years.get(start_year)) + "1231")
     for table_start in table_range.keys():
@@ -94,66 +101,57 @@ def get_missing_dates(pro, engine, ts_code, dates, interface_type):
 def check_integrity_worker(base_name, table_name, code, start_date, end_date, engine):
     retry_count = 0
     isSuccessful = False
-    df = get_from_table_by_tscode_and_tradedateint(table_name=table_name,
-                                                   ts_code=code, start_date=start_date, end_date=end_date,
-                                                   engine=engine)
-    # trade_cal = list(map(int,get_trade_cal(pro,str(list_date),str(table_end))))
-    # standard_size=len(list(filter(lambda x:list_date<=x<=int(table_end),trade_cal)))
-    standard_date = list(map(int, get_trade_cal(pro, str(start_date), str(end_date))))
-    standard_size = len(standard_date)
-    while (retry_count < 3 and not isSuccessful):
-        try:
-            suspend_day_count = get_suspended_day_count(pro=pro, ts_code=code, start_date=str(start_date),
-                                                        end_date=str(end_date))
-            isSuccessful = True
-        except Exception as e:
-            logger.error("error pulling data from tushare for interface suspended day, code " + code)
-            logger.error(e)
-            retry_count = retry_count + 1
-    if (isSuccessful):
-        db_data_size = df['trade_date_int'].size
-        if db_data_size + suspend_day_count < standard_size:
-            # dates in database
-            existing_dates = df['trade_date_int']
-            # existing dates that doesn't exist in dates as standard calendar
-            missing_dates = [i for i in standard_date if i not in list(existing_dates)]
-            re_capture_result = get_missing_dates(pro=pro, engine=engine, ts_code=code, dates=missing_dates,
-                                                  interface_type=base_name)
-            if (re_capture_result.get('missing_from_tushare') > 0):
+    try:
+        df = get_from_table_by_tscode_and_tradedateint(table_name=table_name,
+                                                       ts_code=code, start_date=start_date, end_date=end_date,
+                                                       engine=engine)
+        # trade_cal = list(map(int,get_trade_cal(pro,str(list_date),str(table_end))))
+        # standard_size=len(list(filter(lambda x:list_date<=x<=int(table_end),trade_cal)))
+        standard_date = list(map(int, get_trade_cal(pro, str(start_date), str(end_date))))
+        standard_size = len(standard_date)
+        while (retry_count < 3 and not isSuccessful):
+            try:
+                suspend_day_count = get_suspended_day_count(pro=pro, ts_code=code, start_date=str(start_date),
+                                                            end_date=str(end_date))
+                isSuccessful = True
+            except Exception as e:
+                logger.error("error pulling data from tushare for interface suspended day, code " + code)
+                logger.error(e)
+                retry_count = retry_count + 1
+        if (isSuccessful):
+            db_data_size = df['trade_date_int'].size
+            if db_data_size + suspend_day_count < standard_size:
+                # dates in database
+                existing_dates = df['trade_date_int']
+                # existing dates that doesn't exist in dates as standard calendar
+                missing_dates = [i for i in standard_date if i not in list(existing_dates)]
+                re_capture_result = get_missing_dates(pro=pro, engine=engine, ts_code=code, dates=missing_dates,
+                                                      interface_type=base_name)
+                if (re_capture_result.get('missing_from_tushare') > 0):
+                    logger.debug(
+                        str(re_capture_result.get('missing_from_tushare')) + " lines of data missing for " +
+                        code + " between date " + str(start_date) +
+                        " and " + str(end_date) + " are also missing from tushare")
+                if (re_capture_result.get('number_of_inserted_rows') > 0):
+                    logger.debug(
+                        str(re_capture_result.get(
+                            'number_of_inserted_rows')) + " lines of data missing from db for " +
+                        code + " between date " + str(start_date) +
+                        " and " + str(end_date) + " have been inserted into db")
+            elif db_data_size + suspend_day_count == standard_size:
                 logger.debug(
-                    str(re_capture_result.get('missing_from_tushare')) + " lines of data missing for " +
-                    code + " between date " + str(start_date) +
-                    " and " + str(end_date) + " are also missing from tushare")
-            if (re_capture_result.get('number_of_inserted_rows') > 0):
-                logger.debug(
-                    str(re_capture_result.get(
-                        'number_of_inserted_rows')) + " lines of data missing from db for " +
-                    code + " between date " + str(start_date) +
-                    " and " + str(end_date) + " have been inserted into db")
-        elif db_data_size + suspend_day_count == standard_size:
-            logger.debug(
-                code + " for table " + base_name + " " + str(start_date) + " " + str(end_date) + " is correct")
-        elif db_data_size + suspend_day_count > standard_size:
-            logger.error(
-                "Data duplicate for " + code + " between date " + str(start_date) + " and " + str(end_date))
+                    code + " for table " + base_name + " " + str(start_date) + " " + str(end_date) + " is correct")
+            elif db_data_size + suspend_day_count > standard_size:
+                logger.error(
+                    "Data duplicate for " + code + " between date " + str(start_date) + " and " + str(end_date))
+    except Exception as e:
+        logger.error(e)
+        logger.error(
+            "fetching " + code + " for table " + base_name + " " + str(start_date) + " " + str(end_date) + " failed.")
 
 
-logger = logging.getLogger("data_integrity_check")
+logger = logging_util.get_logger("data_integrity_check", file_name="data_integrity_check")
 logger.setLevel(logging.DEBUG)
-
-# create console handler and set level to debug
-ch = logging.StreamHandler()
-ch.setStream(sys.stdout)
-fi = logging.FileHandler(filename="../data_integrity_check.log")
-
-# create formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# add formatter to ch
-ch.setFormatter(formatter)
-fi.setFormatter(formatter)
-# add ch to logger
-logger.addHandler(ch)
-logger.addHandler(fi)
 
 engine = create_engine(config_service.getDefaultDB())
 
@@ -163,6 +161,7 @@ pro = ts.pro_api(token)
 
 # 956-917
 # get_suspended_day_count(pro,'000001.SZ','19900101','19941231')
-check_integrity_daily_data_table("daily", engine=engine, pro=pro)
+# check_integrity_worker("daily","daily_1995_1999","000062.SZ","19950101","19991231",engine=engine)
+check_integrity_daily_data_table("daily", engine=engine, pro=pro, skipping_year_start=[1990])
 # df = pro.daily(trade_date='19910411',ts_code='000001.SZ',fields='ts_code,trade_date')
 # print(df)
