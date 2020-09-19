@@ -75,8 +75,8 @@ def get_missing_dates(pro, engine, ts_code, dates, interface_type):
     retry_count = 0
     missing_from_tushare = 0
     number_of_inserted_rows = 0
-    isSuccessful = False
     for date in dates:
+        isSuccessful = False
         if (interface_type == 'daily'):
             while (retry_count < 3 and not isSuccessful):
                 try:
@@ -90,7 +90,9 @@ def get_missing_dates(pro, engine, ts_code, dates, interface_type):
                 if df.empty:
                     missing_from_tushare = missing_from_tushare + 1
                 else:
-                    df.to_sql(dbUtil.getTableName(int(date[0:4]), "daily"), engine, if_exists='append', index=False)
+                    df['trade_date_int'] = int(df['trade_date'])
+                    df.to_sql(dbUtil.getTableName(int(str(date)[0:4]), "daily"), engine, if_exists='append',
+                              index=False)
                     number_of_inserted_rows = number_of_inserted_rows + 1
             else:
                 logger.error('error pulling data from tushare for interface daily, code' + ts_code + ' date ' + date)
