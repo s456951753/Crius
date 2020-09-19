@@ -47,8 +47,6 @@ mydb = mysql.connect(
         passwd=config_service.getDefaultDB_cursor_passwd(),
        database=config_service.getDefaultDB_cursor_database(),)
 
-db_table = "new_daily_2015_2019"
-
 def deleteDuplicates(db_table):
     stop = False
     while (not stop):
@@ -71,16 +69,9 @@ def deleteDuplicates(db_table):
     print("Process complete!!!")
 
 
-
-def main():
-    deleteDuplicates()
-
-
-if __name__ == "__main__":
-    main()
-
 # 主程序
 
-fruits = ["apple", "banana", "cherry"]
-for x in fruits:
-  print(x)
+db_table_list = ["limit_list_1990_1994", "limit_list_1995_1999", "limit_list_2000_2004", "limit_list_2005_2009", "limit_list_2010_2014", "limit_list_2015_2019", "limit_list_2020_2024"]
+
+for db_table in db_table_list:
+  deleteDuplicates(db_table)
