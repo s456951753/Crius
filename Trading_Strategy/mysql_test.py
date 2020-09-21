@@ -76,8 +76,6 @@ def handle_bar(context, bar_dict):
     # 因为策略需要用到均线，所以需要读取历史数据
     prices = daily_sql(context.table_name, context.ts_code, context.start_date, context.end_date, engine)
 
-    prices = history_bars(context.s1, context.LONGPERIOD+1, '1d', 'close')
-
     # 使用talib计算长短两根均线，均线以array的格式表达
     short_avg = talib.SMA(prices, context.SHORTPERIOD)
     long_avg = talib.SMA(prices, context.LONGPERIOD)
