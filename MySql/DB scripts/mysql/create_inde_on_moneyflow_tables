@@ -1,3 +1,4 @@
+
 create index ind_moneyflow_1990_1994_id on moneyflow_1990_1994(id);
 create index ind_moneyflow_1990_1994_tscode on moneyflow_1990_1994(ts_code);
 create index ind_moneyflow_1990_1994_trade_date on moneyflow_1990_1994(trade_date);

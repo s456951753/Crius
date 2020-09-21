@@ -51,7 +51,7 @@ def deleteDuplicates(db_table):
     stop = False
     while (not stop):
         mycursor = mydb.cursor()
-        get_dup_query = "select id from (select min(x.id) as id,x.ts_code,x.trade_date from (SELECT id," + db_table + ".ts_code as ts_code," + db_table + ".trade_date as trade_date FROM " + db_table + " INNER JOIN (SELECT trade_date,ts_code FROM " + db_table + " GROUP BY trade_date,ts_code HAVING COUNT(id) > 1) dup ON " + db_table + ".trade_date = dup.trade_date and " + db_table + ".ts_code = dup.ts_code)x GROUP BY x.trade_date,x.ts_code)y;"
+        get_dup_query = "select id from (select min(x.id) as id,x.ts_code,x.ann_date from (SELECT id," + db_table + ".ts_code as ts_code," + db_table + ".ann_date as ann_date FROM " + db_table + " INNER JOIN (SELECT ann_date,ts_code FROM " + db_table + " GROUP BY ann_date,ts_code HAVING COUNT(id) > 1) dup ON " + db_table + ".ann_date = dup.ann_date and " + db_table + ".ts_code = dup.ts_code)x GROUP BY x.ann_date,x.ts_code)y;"
         mycursor.execute(get_dup_query)
         databaseIds = mycursor.fetchall()
         print("Total rows are:  ", len(databaseIds))
@@ -71,7 +71,7 @@ def deleteDuplicates(db_table):
 
 # 主程序
 
-db_table_list = ["limit_list_1990_1994", "limit_list_1995_1999", "limit_list_2000_2004", "limit_list_2005_2009", "limit_list_2010_2014", "limit_list_2015_2019", "limit_list_2020_2024"]
+db_table_list = ["fina_indicator_1990_1994", "fina_indicator_1995_1999", "fina_indicator_2000_2004", "fina_indicator_2005_2009", "fina_indicator_2010_2014", "fina_indicator_2015_2019", "fina_indicator_2020_2024"]
 
 for db_table in db_table_list:
   deleteDuplicates(db_table)
