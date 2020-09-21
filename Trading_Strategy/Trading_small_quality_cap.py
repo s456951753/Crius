@@ -34,11 +34,6 @@ token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAM
 pro = ts.pro_api(token)
 ts.set_token(token)
 
-def get_from_table_by_tscode_and_tradedateint(table_name, ts_code: str, start_date: int, end_date: int,
-                                              engine) -> pd.DataFrame:
-    return pd.read_sql(
-        "select * from " + table_name + " where " + "ts_code=\"" + ts_code + "\" and trade_date between "
-        + str(start_date) + " and " + str(end_date), engine)
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
