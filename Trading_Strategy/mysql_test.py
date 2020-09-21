@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from rqalpha import run_code
-
 code = """
 from rqalpha.api import *
 from timeit import default_timer as timer
@@ -35,7 +34,7 @@ import Utils.DB_utils as dbUtil
 import logging
 import Utils.logging_util as lu
 import builtins
-logger =logging.getLogger('Trading_small_quality_cap')
+logger = logging.getLogger('Trading_small_quality_cap')
 token = config_service.getProperty(section_name=config_service.TOKEN_SECTION_NAME,
                                    property_name=config_service.TS_TOKEN_NAME)
 pro = ts.pro_api(token)
@@ -47,7 +46,7 @@ ts.set_token(token)
 def daily_sql(table_name, ts_code: str, start_date: int, end_date: int,
                                               engine) -> pd.DataFrame:
     return pd.read_sql(
-        "select * from " + table_name + " where " + "ts_code=\"" + ts_code + "\" and trade_date between "
+        "select * from " + table_name + " where " + "ts_code=" + '"'+ts_code + '"'+" and trade_date between "
         + str(start_date) + " and " + str(end_date), engine)
 
 
@@ -62,7 +61,7 @@ def init(context):
     context.ts_code = context.s1
     context.start_date = 20150101
     context.end_date = 20191231
-
+    context.orders = []
 
 # 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
 def handle_bar(context, bar_dict):
@@ -110,6 +109,7 @@ def after_trading(context):
     logger.info("Net value by today:" + str(context.portfolio.unit_net_value))
     logger.info("Profit today:" + str(context.portfolio.daily_pnl))
     logger.info("Annualized return:" + str(context.portfolio.annualized_returns))
+
     if (context.now.date().strftime("%Y%m%d") == context.config.base.end_date.strftime("%Y%m%d")):
         pd.DataFrame(context.orders).to_csv('out.csv', index=True)
     # end = timer()

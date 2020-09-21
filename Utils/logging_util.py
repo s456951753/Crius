@@ -34,7 +34,7 @@ def get_info_for_order(order: rqalpha.model.order, portfolio: rqalpha.portfolio,
     logger.debug(portfolio.positions)
 
 
-def get_logger(base_name, file_name="engine"):
+def get_logger(base_name, file_name=None):
     """
     get a logger that write logs to both stdout and a file. Default logging level is info so remember to
     :param base_name:
@@ -42,13 +42,15 @@ def get_logger(base_name, file_name="engine"):
     :param logging_level:
     :return:
     """
+    if (file_name is None):
+        file_name = base_name
     logger = logging.getLogger(base_name)
     logger.setLevel(logging.INFO)
 
     # create console handler and set level to debug
     ch = logging.StreamHandler()
     ch.setStream(sys.stdout)
-    fi = logging.FileHandler(filename="..//" + file_name + ".log")
+    fi = logging.FileHandler(filename="E:\PycharmProjects\Crius\\" + file_name + ".log")
 
     # create formatter
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

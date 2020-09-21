@@ -142,3 +142,4 @@ Trading_Strategy/out1.csv
 
 #log file
 engine.log
+*.log
