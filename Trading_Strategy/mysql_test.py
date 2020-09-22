@@ -52,7 +52,7 @@ def daily_sql(table_name, ts_code: str, start_date: int, end_date: int,
 
 # 在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
 def init(context):
-    context.s1 = "000001.XSHE"
+    context.s1 = "000001.SZ"
 
     # 设置这个策略当中会用到的参数，在策略中可以随时调用，这个策略使用长短均线，我们在这里设定长线和短线的区间，在调试寻找最佳区间的时候只需要在这里进行数值改动
     context.SHORTPERIOD = 20
@@ -74,7 +74,7 @@ def handle_bar(context, bar_dict):
     # TODO: 开始编写你的算法吧！
 
     # 因为策略需要用到均线，所以需要读取历史数据
-    prices = daily_sql(context.table_name, context.ts_code, context.start_date, context.end_date, engine)
+    prices = daily_sql(context.table_name, context.ts_code, context.start_date, context.end_date, engine)['close'].to_numpy(dtype="float64")
 
     # 使用talib计算长短两根均线，均线以array的格式表达
     short_avg = talib.SMA(prices, context.SHORTPERIOD)
@@ -82,9 +82,10 @@ def handle_bar(context, bar_dict):
 
     plot("short avg", short_avg[-1])
     plot("long avg", long_avg[-1])
-
     # 计算现在portfolio中股票的仓位
     cur_position = get_position(context.s1).quantity
+    print("here")
+
     # 计算现在portfolio中的现金可以购买多少股票
     shares = context.portfolio.cash / bar_dict[context.s1].close
 
